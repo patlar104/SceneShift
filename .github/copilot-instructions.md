@@ -6,7 +6,8 @@ SceneShift is a Swift and SwiftUI Apple-platform project for intelligent spatial
 
 - Treat SceneShift as an Apple-platform app. Prefer Swift, SwiftUI, and native Apple frameworks.
 - RoomPlan, ARKit, and RealityKit require Apple tooling. Do not treat Linux results as successful iOS build verification.
-- Code must remain compatible with the selected deployment target once that target is documented in the Xcode project.
+- Deployment target is iOS 26.5. Bundle identifier is `patrick.SceneShift`. Scheme is `SceneShift`.
+- Code must remain compatible with that deployment target.
 - Do not invent unsupported Apple APIs, symbols, capability keys, or framework behaviors.
 - Claim build success only when confirmed by Xcode or macOS CI.
 
@@ -38,7 +39,8 @@ SceneShift is a Swift and SwiftUI Apple-platform project for intelligent spatial
 
 - Linux compilation or partial checks are not proof that the iOS app builds.
 - Do not claim hardware, LiDAR, camera, or RoomPlan validation without testing on a supported Apple device or reporting the limitation clearly.
-- Until the Xcode project exists, do not invent scheme names, bundle identifiers, entitlements, or CI destinations.
+- Do not invent entitlements, capability keys, Info.plist permission strings, or CI destinations until a feature or CI workflow intentionally needs them.
+- Open `sceneshift.xcworkspace` (references `SceneShift.xcodeproj`). App sources live in `SceneShift/`; tests live in `SceneShiftTests/` and `SceneShiftUITests/`.
 
 ## Source of truth
 

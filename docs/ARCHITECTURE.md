@@ -1,6 +1,16 @@
 # SceneShift Architecture
 
-This document describes the proposed app structure before the Xcode project exists. Paths, targets, and module boundaries should be adapted once the real project structure is available. Prefer small, testable modules over premature abstraction.
+This document describes the proposed app structure against the landed Xcode project. Prefer small, testable modules over premature abstraction.
+
+Current project layout:
+
+- App target sources: `SceneShift/`
+- Unit tests: `SceneShiftTests/`
+- UI tests: `SceneShiftUITests/`
+- Project file: `SceneShift.xcodeproj`
+- Workspace: `sceneshift.xcworkspace` (open this in Xcode)
+- Bundle identifier: `patrick.SceneShift`
+- Deployment target: iOS 26.5
 
 ## Design principles
 
@@ -8,7 +18,7 @@ This document describes the proposed app structure before the Xcode project exis
 - Prefer native Apple frameworks: SwiftUI, RoomPlan, ARKit, RealityKit, and Foundation
 - Keep capture, domain models, persistence, editing, validation, and suggestion logic separable
 - Avoid inventing unsupported Apple APIs
-- Keep architecture flexible until the Xcode project lands
+- Keep module boundaries flexible as features land
 
 ## Suggested areas
 
@@ -142,21 +152,15 @@ Views should depend on models and services. Capture frameworks should not leak i
 ## Testing expectations
 
 - Unit-test non-UI logic: model mapping, persistence versioning, validation, suggestion ranking, and reconciliation
-- UI tests can cover navigation and critical flows once the Xcode UI-test target exists
+- UI tests in `SceneShiftUITests/` can cover navigation and critical flows
 - Do not treat Linux compilation as successful iOS verification
 - Only claim device or LiDAR validation after testing on a supported Apple device
 
-## Deferred until the Xcode project exists
+## Still deferred
 
-Do not create these prematurely:
+Do not invent these until a feature or CI workflow needs them:
 
-- Swift source files
-- Xcode build settings
 - Entitlements and app capabilities
 - Package dependencies
-- macOS CI workflows with exact scheme names
-- Simulator destinations
-- Bundle identifier references
-- App target paths
-
-Those details must follow the real project structure.
+- macOS CI workflows and simulator destinations
+- Persistence stack choice beyond the local-only MVP requirement
