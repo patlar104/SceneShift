@@ -10,6 +10,9 @@
 		BB0000000000000000000010 /* SceneShiftApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000010 /* SceneShiftApp.swift */; };
 		BB0000000000000000000030 /* SavedScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000030 /* SavedScan.swift */; };
 		BB0000000000000000000031 /* ScanStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000031 /* ScanStore.swift */; };
+		BB0000000000000000000040 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000040 /* HomeView.swift */; };
+		BB0000000000000000000041 /* ScanSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000041 /* ScanSessionView.swift */; };
+		BB0000000000000000000042 /* RoomCaptureRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000042 /* RoomCaptureRepresentable.swift */; };
 		BB0000000000000000000012 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000012 /* PrivacyInfo.xcprivacy */; };
 		BB0000000000000000000013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000013 /* Assets.xcassets */; };
 		BB0000000000000000000014 /* SceneShiftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000014 /* SceneShiftTests.swift */; };
@@ -39,6 +42,9 @@
 		AA0000000000000000000030 /* SavedScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedScan.swift; sourceTree = "<group>"; };
 		AA0000000000000000000031 /* ScanStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanStore.swift; sourceTree = "<group>"; };
 		AA0000000000000000000032 /* ScanStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanStoreTests.swift; sourceTree = "<group>"; };
+		AA0000000000000000000040 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000041 /* ScanSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanSessionView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000042 /* RoomCaptureRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomCaptureRepresentable.swift; sourceTree = "<group>"; };
 		AA0000000000000000000020 /* RoomPlan.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RoomPlan.framework; path = System/Library/Frameworks/RoomPlan.framework; sourceTree = SDKROOT; };
 		AA0000000000000000000021 /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -77,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				CC0000000000000000000002 /* App */,
+				CC0000000000000000000009 /* Features */,
 				CC0000000000000000000007 /* Models */,
 				CC0000000000000000000008 /* Services */,
 				CC0000000000000000000003 /* Supporting */,
@@ -116,6 +123,32 @@
 				AA0000000000000000000031 /* ScanStore.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		CC0000000000000000000009 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000000000000000000010 /* Home */,
+				CC0000000000000000000011 /* Scan */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		CC0000000000000000000010 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000040 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		CC0000000000000000000011 /* Scan */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000041 /* ScanSessionView.swift */,
+				AA0000000000000000000042 /* RoomCaptureRepresentable.swift */,
+			);
+			path = Scan;
 			sourceTree = "<group>";
 		};
 		CC0000000000000000000004 /* SceneShiftTests */ = {
@@ -248,6 +281,9 @@
 				BB0000000000000000000010 /* SceneShiftApp.swift in Sources */,
 				BB0000000000000000000030 /* SavedScan.swift in Sources */,
 				BB0000000000000000000031 /* ScanStore.swift in Sources */,
+				BB0000000000000000000040 /* HomeView.swift in Sources */,
+				BB0000000000000000000041 /* ScanSessionView.swift in Sources */,
+				BB0000000000000000000042 /* RoomCaptureRepresentable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
