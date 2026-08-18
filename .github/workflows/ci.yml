@@ -1,0 +1,73 @@
+# Cloud-verify CI. Two jobs are gated by path existence so this workflow
+# succeeds on an empty app tree (Task 0). Enable work by adding files:
+#   ios-test     → SceneShift.xcodeproj (Task 1+)
+#   scripts-check → scripts/package.json (Task 5+)
+#
+# Simulator destination: prefer OS=latest + iPhone 16.
+# If that name is missing, see AGENTS.md (xcodebuild -showdestinations fallback).
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: detect-paths
+    runs-on: ubuntu-latest
+    outputs:
+      has_scripts: ${{ steps.paths.outputs.has_scripts }}
+      has_xcodeproj: ${{ steps.paths.outputs.has_xcodeproj }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: paths
+        name: Check for Task 1 / Task 5 paths
+        run: |
+          if [ -f scripts/package.json ]; then
+            echo "has_scripts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_scripts=false" >> "$GITHUB_OUTPUT"
+            echo "scripts-check will skip until Task 5 (scripts/package.json missing)"
+          fi
+          if [ -d SceneShift.xcodeproj ]; then
+            echo "has_xcodeproj=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_xcodeproj=false" >> "$GITHUB_OUTPUT"
+            echo "ios-test will skip until Task 1 (SceneShift.xcodeproj missing)"
+          fi
+
+  scripts-check:
+    name: scripts-check
+    needs: detect
+    if: needs.detect.outputs.has_scripts == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scripts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.13"
+          cache: npm
+          cache-dependency-path: scripts/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+
+  ios-test:
+    name: ios-test
+    needs: detect
+    if: needs.detect.outputs.has_xcodeproj == 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run XCTest on iOS Simulator
+        run: |
+          xcodebuild test \
+            -scheme SceneShift \
+            -destination 'platform=iOS Simulator,OS=latest,name=iPhone 16'

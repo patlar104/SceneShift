@@ -1,0 +1,29 @@
+---
+description: TypeScript conventions for SceneShift Cursor SDK scripts
+globs: "scripts/**/*.ts"
+alwaysApply: false
+---
+
+# scripts/ TypeScript
+
+Dev automation only — not app runtime, not a production API. Official docs: [Cursor TypeScript SDK](https://cursor.com/docs/sdk/typescript).
+
+- Node **22.13+**, **npm**, **tsx**, ESM + `module`/`moduleResolution`: `NodeNext`. **Not Bun.**
+- Pin `@cursor/sdk` (e.g. `^1.0.25`); never `"latest"`
+- Local: `local: { cwd: repoRoot, settingSources: [] }`
+- Cloud: explicit `cloud.repos[]`, `autoCreatePR: true`, `skipReviewerRequest: true`
+- Exit codes: 1 = startup error, 2 = run error, 0 = success
+- Never commit `CURSOR_API_KEY` or `scripts/.env`
+- Exhaustive `switch` on unions: `default` must assign `never`
+
+```typescript
+// ❌ BAD
+await Agent.create({ apiKey, local: { cwd: process.cwd() } }); // wrong cwd; unpinned sdk
+
+// ✅ GOOD
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+await using agent = await Agent.create({
+  apiKey,
+  local: { cwd: repoRoot, settingSources: [] },
+});
+```
