@@ -21,6 +21,10 @@
 		BB0000000000000000000021 /* ARKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* ARKit.framework */; };
 		BB0000000000000000000022 /* RealityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* RealityKit.framework */; };
 		BB0000000000000000000050 /* RoomPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000050 /* RoomPreviewView.swift */; };
+		BB0000000000000000000051 /* WalkthroughCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000051 /* WalkthroughCamera.swift */; };
+		BB0000000000000000000052 /* PreviewLoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000052 /* PreviewLoad.swift */; };
+		BB0000000000000000000053 /* RoomWalkthroughARView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000053 /* RoomWalkthroughARView.swift */; };
+		BB0000000000000000000054 /* WalkthroughGestureSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000054 /* WalkthroughGestureSession.swift */; };
 		BB0000000000000000000033 /* WalkthroughCameraTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000033 /* WalkthroughCameraTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -52,6 +56,10 @@
 		AA0000000000000000000021 /* ARKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ARKit.framework; path = System/Library/Frameworks/ARKit.framework; sourceTree = SDKROOT; };
 		AA0000000000000000000022 /* RealityKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RealityKit.framework; path = System/Library/Frameworks/RealityKit.framework; sourceTree = SDKROOT; };
 		AA0000000000000000000050 /* RoomPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomPreviewView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000051 /* WalkthroughCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkthroughCamera.swift; sourceTree = "<group>"; };
+		AA0000000000000000000052 /* PreviewLoad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewLoad.swift; sourceTree = "<group>"; };
+		AA0000000000000000000053 /* RoomWalkthroughARView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomWalkthroughARView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000054 /* WalkthroughGestureSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkthroughGestureSession.swift; sourceTree = "<group>"; };
 		AA0000000000000000000033 /* WalkthroughCameraTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkthroughCameraTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -163,6 +171,10 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000050 /* RoomPreviewView.swift */,
+				AA0000000000000000000052 /* PreviewLoad.swift */,
+				AA0000000000000000000053 /* RoomWalkthroughARView.swift */,
+				AA0000000000000000000051 /* WalkthroughCamera.swift */,
+				AA0000000000000000000054 /* WalkthroughGestureSession.swift */,
 			);
 			path = Preview;
 			sourceTree = "<group>";
@@ -303,6 +315,10 @@
 				BB0000000000000000000041 /* ScanSessionView.swift in Sources */,
 				BB0000000000000000000042 /* RoomCaptureRepresentable.swift in Sources */,
 				BB0000000000000000000050 /* RoomPreviewView.swift in Sources */,
+				BB0000000000000000000051 /* WalkthroughCamera.swift in Sources */,
+				BB0000000000000000000052 /* PreviewLoad.swift in Sources */,
+				BB0000000000000000000053 /* RoomWalkthroughARView.swift in Sources */,
+				BB0000000000000000000054 /* WalkthroughGestureSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

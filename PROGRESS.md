@@ -4,10 +4,10 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 
 ## Current
 
-- Task: 4 complete (walkthrough preview + non-AR load unstick) — waiting for user approval before Task 5
+- Task: 4 complete (walkthrough preview + exclusive 1-finger look / 2-finger strafe) — waiting for user approval before Task 5
 - Branch: feat/task-4-preview-export
 - Last cloud agent: none
-- Blockers: none — `[device-only]` preview/share/rename/delete/disk-full is for the human; do not block merge. Re-verify on device: opening a saved scan should dismiss the spinner, not start the camera, and allow walkthrough.
+- Blockers: none — `[device-only]` preview/share/rename/delete/disk-full is for the human; do not block merge. Re-verify on device: one-finger drag looks without sliding; two-finger slides; pinch dollies; Reset; spinner still dismisses; share still sends USDZ.
 - Fixture: full `CapturedRoom` JSON round-trip still waits for `SceneShiftTests/Fixtures/sample.room`. Export one real scan during a device test. Do not invent JSON.
 - Signing: `DEVELOPMENT_TEAM = LX83XRP475` is in `project.pbxproj` (Automatic, bundle `com.sceneshift.app`). Not xcuserdata-only.
 
