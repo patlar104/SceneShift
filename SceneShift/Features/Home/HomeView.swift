@@ -149,11 +149,16 @@ struct ScanPreviewContainer: View {
             } else if isExporting {
                 ProgressView("Exporting scan…")
             } else {
-                ContentUnavailableView(
-                    "Preview unavailable",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(exportErrorMessage ?? "Could not export this scan.")
-                )
+                ContentUnavailableView {
+                    Label("Preview unavailable", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(exportErrorMessage ?? "Could not export this scan.")
+                } actions: {
+                    Button("Retry") {
+                        isExporting = true
+                        Task { await exportPreview() }
+                    }
+                }
             }
         }
         .navigationTitle(currentScan?.name ?? "Scan")

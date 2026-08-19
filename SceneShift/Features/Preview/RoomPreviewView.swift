@@ -1,3 +1,4 @@
+import Combine
 import RealityKit
 import SwiftUI
 import UIKit
@@ -6,55 +7,190 @@ struct RoomPreviewView: View {
     let url: URL
 
     @State private var resetToken = 0
-    @State private var isLoading = true
-    @State private var loadError: String?
+    @State private var retryCount = 0
+    @State private var loadState: PreviewLoadState = .loading
+    @State private var loadedEntity: Entity?
 
     var body: some View {
         ZStack {
-            RoomWalkthroughARView(
-                url: url,
-                resetToken: resetToken,
-                onLoadFinished: { error in
-                    isLoading = false
-                    loadError = error
-                }
-            )
-
-            if isLoading {
+            switch loadState {
+            case .loading:
                 ProgressView("Loading preview…")
                     .padding()
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-            } else if let loadError {
-                ContentUnavailableView(
-                    "Preview unavailable",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(loadError)
-                )
-            } else {
-                VStack {
-                    Spacer()
-                    HStack(alignment: .bottom) {
-                        Text("Drag to look · Two-finger pan · Pinch to move")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .background(.ultraThinMaterial, in: Capsule())
-                        Spacer()
-                        Button {
-                            resetToken += 1
-                        } label: {
-                            Label("Reset", systemImage: "camera.rotate")
-                        }
-                        .buttonStyle(.borderedProminent)
+            case .failed(let message):
+                ContentUnavailableView {
+                    Label("Preview unavailable", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry") {
+                        retryLoad()
                     }
-                    .padding()
+                }
+            case .ready:
+                if let loadedEntity {
+                    RoomWalkthroughARView(entity: loadedEntity, resetToken: resetToken)
+                        .id(url)
+                        .ignoresSafeArea(edges: .bottom)
+                    walkthroughControls
                 }
             }
         }
+        .task(id: loadTaskID) {
+            await loadPreview()
+        }
         .onChange(of: url) { _, _ in
-            isLoading = true
-            loadError = nil
+            retryCount = 0
+            loadedEntity = nil
+            loadState = .loading
+        }
+    }
+
+    private var loadTaskID: String {
+        "\(url.absoluteString)#\(retryCount)"
+    }
+
+    private var walkthroughControls: some View {
+        VStack {
+            Spacer()
+            HStack(alignment: .bottom) {
+                Text("Drag to look · Two-finger pan · Pinch to move")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial, in: Capsule())
+                Spacer()
+                Button {
+                    resetToken += 1
+                } label: {
+                    Label("Reset", systemImage: "camera.rotate")
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding()
+        }
+    }
+
+    private func retryLoad() {
+        loadedEntity = nil
+        loadState = .loading
+        retryCount += 1
+    }
+
+    @MainActor
+    private func loadPreview() async {
+        loadState = .loading
+        loadedEntity = nil
+        do {
+            let entity = try await PreviewLoad.withTimeout {
+                try await Self.loadEntity(from: url)
+            }
+            loadedEntity = entity
+            loadState = .ready
+        } catch {
+            loadedEntity = nil
+            loadState = .finished(error: error)
+        }
+    }
+
+    @MainActor
+    private static func loadEntity(from url: URL) async throws -> Entity {
+        if #available(iOS 18.0, *) {
+            return try await Entity(contentsOf: url)
+        }
+        return try await loadEntityUsingLoadAsync(from: url)
+    }
+
+    @MainActor
+    private static func loadEntityUsingLoadAsync(from url: URL) async throws -> Entity {
+        let box = LoadAsyncBox()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                box.fail = { error in
+                    box.resumeOnce {
+                        continuation.resume(throwing: error)
+                    }
+                }
+                box.cancellable = Entity.loadAsync(contentsOf: url).sink(
+                    receiveCompletion: { completion in
+                        if case let .failure(error) = completion {
+                            box.fail?(error)
+                        }
+                        box.cancellable = nil
+                    },
+                    receiveValue: { entity in
+                        box.resumeOnce {
+                            continuation.resume(returning: entity)
+                        }
+                    }
+                )
+            }
+        } onCancel: {
+            box.cancellable?.cancel()
+            box.fail?(CancellationError())
+            box.cancellable = nil
+        }
+    }
+}
+
+private final class LoadAsyncBox {
+    var cancellable: AnyCancellable?
+    var fail: ((Error) -> Void)?
+    private var didResume = false
+
+    func resumeOnce(_ resume: () -> Void) {
+        guard !didResume else { return }
+        didResume = true
+        resume()
+    }
+}
+
+enum PreviewLoadState: Equatable {
+    case loading
+    case ready
+    case failed(String)
+
+    static func finished(error: Error?) -> PreviewLoadState {
+        if let error {
+            return .failed(error.localizedDescription)
+        }
+        return .ready
+    }
+}
+
+enum PreviewLoadError: Error, Equatable, LocalizedError {
+    case timedOut
+
+    var errorDescription: String? {
+        switch self {
+        case .timedOut:
+            return "Preview took too long to load."
+        }
+    }
+}
+
+enum PreviewLoad {
+    static let timeoutNanoseconds: UInt64 = 15_000_000_000
+
+    static func withTimeout<T>(
+        nanoseconds: UInt64 = timeoutNanoseconds,
+        operation: @escaping () async throws -> T
+    ) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
+            }
+            group.addTask {
+                try await Task.sleep(nanoseconds: nanoseconds)
+                throw PreviewLoadError.timedOut
+            }
+            defer { group.cancelAll() }
+            guard let value = try await group.next() else {
+                throw PreviewLoadError.timedOut
+            }
+            return value
         }
     }
 }
@@ -124,9 +260,8 @@ struct WalkthroughCamera: Equatable {
 }
 
 private struct RoomWalkthroughARView: UIViewRepresentable {
-    let url: URL
+    let entity: Entity
     var resetToken: Int
-    var onLoadFinished: (String?) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -134,19 +269,17 @@ private struct RoomWalkthroughARView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> ARView {
         let view = ARView(frame: .zero, cameraMode: .nonAR, automaticallyConfigureSession: false)
-        view.environment.background = .color(UIColor.secondarySystemBackground)
-        view.environment.lighting.intensityExponent = 1.2
-        view.renderOptions.insert(.disableMotionBlur)
+        configureNonAR(view)
         context.coordinator.attach(to: view)
-        context.coordinator.load(url, onLoadFinished: onLoadFinished)
+        context.coordinator.install(entity)
         context.coordinator.resetToken = resetToken
         return view
     }
 
     func updateUIView(_ uiView: ARView, context: Context) {
-        context.coordinator.onLoadFinished = onLoadFinished
-        if context.coordinator.url != url {
-            context.coordinator.load(url, onLoadFinished: onLoadFinished)
+        configureNonAR(uiView)
+        if context.coordinator.installedEntity !== entity {
+            context.coordinator.install(entity)
         }
         if context.coordinator.resetToken != resetToken {
             context.coordinator.resetToken = resetToken
@@ -154,10 +287,14 @@ private struct RoomWalkthroughARView: UIViewRepresentable {
         }
     }
 
+    static func dismantleUIView(_ uiView: ARView, coordinator: Coordinator) {
+        uiView.session.pause()
+        coordinator.detach()
+    }
+
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
-        var url: URL?
         var resetToken = 0
-        var onLoadFinished: ((String?) -> Void)?
+        private(set) var installedEntity: Entity?
 
         private weak var arView: ARView?
         private var cameraEntity: PerspectiveCamera?
@@ -174,9 +311,16 @@ private struct RoomWalkthroughARView: UIViewRepresentable {
             installCamera(in: view)
         }
 
-        func load(_ url: URL, onLoadFinished: @escaping (String?) -> Void) {
-            self.url = url
-            self.onLoadFinished = onLoadFinished
+        func detach() {
+            if let roomAnchor, let arView {
+                arView.scene.removeAnchor(roomAnchor)
+            }
+            roomAnchor = nil
+            installedEntity = nil
+            arView = nil
+        }
+
+        func install(_ entity: Entity) {
             guard let arView else { return }
 
             if let roomAnchor {
@@ -184,35 +328,22 @@ private struct RoomWalkthroughARView: UIViewRepresentable {
                 self.roomAnchor = nil
             }
 
-            do {
-                let entity = try Entity.load(contentsOf: url)
-                let anchor = AnchorEntity(world: .zero)
-                anchor.addChild(entity)
-                addLights(to: anchor, around: entity)
-                arView.scene.addAnchor(anchor)
-                roomAnchor = anchor
+            entity.removeFromParent()
+            let anchor = AnchorEntity(world: .zero)
+            anchor.anchoring = AnchoringComponent(.world(transform: matrix_identity_float4x4))
+            anchor.addChild(entity)
+            addLights(to: anchor, around: entity)
+            arView.scene.addAnchor(anchor)
+            roomAnchor = anchor
+            installedEntity = entity
 
-                let bounds = entity.visualBounds(relativeTo: nil)
-                let framed = bounds.isEmpty
-                    ? WalkthroughCamera(eye: SIMD3(0, 1.5, 2), yaw: 0, pitch: 0)
-                    : WalkthroughCamera.framed(in: bounds)
-                initialCamera = framed
-                cameraState = framed
-                applyCamera()
-                reportLoadFinished(nil)
-            } catch {
-                reportLoadFinished(error.localizedDescription)
-            }
-        }
-
-        /// SwiftUI forbids @State writes during makeUIView/updateUIView. Cached previous
-        /// scans load synchronously, so hop to the next run loop before reporting.
-        private func reportLoadFinished(_ message: String?) {
-            let loadedURL = url
-            DispatchQueue.main.async { [weak self] in
-                guard let self, self.url == loadedURL else { return }
-                self.onLoadFinished?(message)
-            }
+            let bounds = entity.visualBounds(relativeTo: nil)
+            let framed = bounds.isEmpty
+                ? WalkthroughCamera(eye: SIMD3(0, 1.5, 2), yaw: 0, pitch: 0)
+                : WalkthroughCamera.framed(in: bounds)
+            initialCamera = framed
+            cameraState = framed
+            applyCamera()
         }
 
         func resetCamera() {
@@ -231,6 +362,7 @@ private struct RoomWalkthroughARView: UIViewRepresentable {
             let camera = PerspectiveCamera()
             camera.camera.fieldOfViewInDegrees = 70
             let cameraAnchor = AnchorEntity(world: .zero)
+            cameraAnchor.anchoring = AnchoringComponent(.world(transform: matrix_identity_float4x4))
             cameraAnchor.addChild(camera)
             view.scene.addAnchor(cameraAnchor)
             cameraEntity = camera
@@ -327,4 +459,21 @@ private struct RoomWalkthroughARView: UIViewRepresentable {
             }
         }
     }
+}
+
+private func configureNonAR(_ view: ARView) {
+    view.automaticallyConfigureSession = false
+    view.cameraMode = .nonAR
+    view.session.pause()
+    view.environment.background = .color(UIColor.black)
+    view.environment.lighting.intensityExponent = 1.2
+    view.environment.sceneUnderstanding.options = []
+    view.renderOptions = [
+        .disablePersonOcclusion,
+        .disableDepthOfField,
+        .disableMotionBlur,
+        .disableCameraGrain,
+        .disableGroundingShadows,
+        .disableAREnvironmentLighting
+    ]
 }

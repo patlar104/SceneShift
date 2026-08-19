@@ -51,3 +51,35 @@ final class WalkthroughCameraTests: XCTestCase {
         XCTAssertLessThan(camera.eye.y, bounds.max.y)
     }
 }
+
+final class PreviewLoadStateTests: XCTestCase {
+    func testFinishedClearsLoadingOnSuccess() {
+        XCTAssertEqual(PreviewLoadState.finished(error: nil), .ready)
+    }
+
+    func testFinishedSurfacesFailureMessage() {
+        XCTAssertEqual(
+            PreviewLoadState.finished(error: PreviewLoadError.timedOut),
+            .failed("Preview took too long to load.")
+        )
+    }
+
+    func testTimeoutWinsOverSlowOperation() async {
+        do {
+            _ = try await PreviewLoad.withTimeout(nanoseconds: 50_000_000) {
+                try await Task.sleep(nanoseconds: 2_000_000_000)
+                return 1
+            }
+            XCTFail("Expected timeout")
+        } catch {
+            XCTAssertEqual(error as? PreviewLoadError, .timedOut)
+        }
+    }
+
+    func testTimeoutReturnsFastResult() async throws {
+        let value = try await PreviewLoad.withTimeout(nanoseconds: 1_000_000_000) {
+            42
+        }
+        XCTAssertEqual(value, 42)
+    }
+}
