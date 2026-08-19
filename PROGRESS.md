@@ -4,7 +4,7 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 
 ## Current
 
-- Task: 4 complete (walkthrough preview follow-up) — waiting for user approval before Task 5
+- Task: 4 complete (walkthrough preview follow-up + SwiftUI state-during-update fix) — waiting for user approval before Task 5
 - Branch: feat/task-4-preview-export
 - Last cloud agent: none
 - Blockers: none — `[device-only]` preview/share/rename/delete/disk-full is for the human; do not block merge

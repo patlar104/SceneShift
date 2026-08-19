@@ -199,9 +199,19 @@ private struct RoomWalkthroughARView: UIViewRepresentable {
                 initialCamera = framed
                 cameraState = framed
                 applyCamera()
-                onLoadFinished(nil)
+                reportLoadFinished(nil)
             } catch {
-                onLoadFinished(error.localizedDescription)
+                reportLoadFinished(error.localizedDescription)
+            }
+        }
+
+        /// SwiftUI forbids @State writes during makeUIView/updateUIView. Cached previous
+        /// scans load synchronously, so hop to the next run loop before reporting.
+        private func reportLoadFinished(_ message: String?) {
+            let loadedURL = url
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.url == loadedURL else { return }
+                self.onLoadFinished?(message)
             }
         }
 

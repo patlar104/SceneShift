@@ -22,9 +22,7 @@ struct HomeView: View {
                 } else {
                     List {
                         ForEach(scanStore.scans) { scan in
-                            NavigationLink {
-                                ScanPreviewContainer(scan: scan)
-                            } label: {
+                            NavigationLink(value: scan.id) {
                                 scanRow(scan)
                             }
                             .swipeActions(edge: .leading) {
@@ -47,6 +45,9 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("SceneShift")
+            .navigationDestination(for: UUID.self) { scanID in
+                ScanPreviewContainer(scanID: scanID)
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("New Scan") {
@@ -127,17 +128,17 @@ struct HomeView: View {
     }
 }
 
-private struct ScanPreviewContainer: View {
+struct ScanPreviewContainer: View {
     @EnvironmentObject private var scanStore: ScanStore
-    let scan: SavedScan
+    let scanID: UUID
 
     @State private var previewURL: URL?
     @State private var isExporting = true
     @State private var showDiskFullAlert = false
     @State private var exportErrorMessage: String?
 
-    private var currentScan: SavedScan {
-        scanStore.scans.first(where: { $0.id == scan.id }) ?? scan
+    private var currentScan: SavedScan? {
+        scanStore.scans.first(where: { $0.id == scanID })
     }
 
     var body: some View {
@@ -155,7 +156,7 @@ private struct ScanPreviewContainer: View {
                 )
             }
         }
-        .navigationTitle(currentScan.name)
+        .navigationTitle(currentScan?.name ?? "Scan")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if let previewURL {
@@ -176,11 +177,18 @@ private struct ScanPreviewContainer: View {
 
     @MainActor
     private func exportPreview() async {
-        isExporting = true
+        // Let the navigation/view update finish before touching ScanStore or @State.
+        await Task.yield()
+        guard let scan = currentScan else {
+            previewURL = nil
+            exportErrorMessage = "Scan not found"
+            isExporting = false
+            return
+        }
         exportErrorMessage = nil
         do {
             // Cached USDZ stays on disk until the user deletes the scan so share can finish.
-            previewURL = try scanStore.exportUSDZ(for: currentScan)
+            previewURL = try scanStore.exportUSDZ(for: scan)
         } catch {
             previewURL = nil
             if isInsufficientStorage(error) {
