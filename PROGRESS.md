@@ -4,7 +4,7 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 
 ## Current
 
-- Task: 4 complete — waiting for user approval before Task 5
+- Task: 4 complete (walkthrough preview follow-up) — waiting for user approval before Task 5
 - Branch: feat/task-4-preview-export
 - Last cloud agent: none
 - Blockers: none — `[device-only]` preview/share/rename/delete/disk-full is for the human; do not block merge
@@ -37,7 +37,7 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 
 ## [device-only] Task 4 checklist (human on LiDAR iPhone)
 
-1. Open a saved scan from Home — Quick Look should preview the exported USDZ.
+1. Open a saved scan from Home — in-app RealityKit preview should allow look (drag), ground pan (two-finger), and dolly (pinch). Share still sends the USDZ (Quick Look/AirDrop remain orbit-style).
 2. Confirm each list row shows a formatted file size (e.g. "12.4 MB").
 3. Share the USDZ via AirDrop or Files. Cached USDZ stays on disk until you delete the scan.
 4. Rename via leading swipe or context menu; swipe-to-delete removes the scan.

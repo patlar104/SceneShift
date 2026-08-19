@@ -65,3 +65,6 @@ fastlane/test_output
 scripts/node_modules/
 scripts/.env
 .env
+
+# AirDropped device scans — do not commit USDZ binaries
+airdroped-tests/
