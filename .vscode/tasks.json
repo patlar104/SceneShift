@@ -4,15 +4,14 @@
     {
       "label": "SceneShift: Test (Simulator)",
       "type": "shell",
-      "command": "xcodebuild test -scheme SceneShift -destination 'platform=iOS Simulator,OS=latest,name=iPhone 16'",
+      "command": "bash '${workspaceFolder}/.vscode/run-ios-test.sh'",
       "problemMatcher": [],
       "group": "test"
     },
     {
       "label": "scripts: typecheck",
       "type": "shell",
-      "options": { "cwd": "scripts" },
-      "command": "npm run typecheck",
+      "command": "if [ -f scripts/package.json ]; then npm run typecheck --prefix scripts; else echo 'scripts/ not present yet (Task 5); skipping typecheck.'; fi",
       "problemMatcher": [],
       "group": "build"
     }

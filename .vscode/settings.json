@@ -1,6 +1,13 @@
 {
-  "files.exclude": { "**/.build": true, "scripts/node_modules": true },
-  "search.exclude": { "scripts/node_modules": true },
-  "typescript.tsdk": "scripts/node_modules/typescript/lib",
-  "editor.formatOnSave": true
+  "files.exclude": {
+    "**/.build": true,
+    "scripts/node_modules": true
+  },
+  "search.exclude": {
+    "scripts/node_modules": true
+  },
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "*.xcprivacy": "xml"
+  }
 }
