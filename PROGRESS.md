@@ -17,7 +17,7 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 - [x] Task 1 — Xcode SwiftUI project shell (iOS 17, RoomPlan linked, Info.plist)
 - [x] Task 2 — ScanStore + SavedScan with XCTest round-trip tests
 - [x] Task 3 — RoomPlan scan flow (RoomCaptureRepresentable, ScanSessionView, LiDAR guard)
-- [x] Task 4 — Quick Look preview, USDZ export, share sheet, delete/rename from library
+- [x] Task 4 — RealityKit walkthrough preview, USDZ export, share sheet, delete/rename from library
 
 ## Pending
 

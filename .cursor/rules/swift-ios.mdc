@@ -8,9 +8,12 @@ alwaysApply: false
 
 Follow [The Swift Programming Language](https://www.swift.org/documentation/) and [API Design Guidelines](https://www.swift.org/documentation/). Names: `ScanStore`, `SavedScan`, `ScanSessionView`.
 
-- Deployment: iOS 17+. Link **system** `RoomPlan` + `ARKit` via Xcode; **no CocoaPods**, no root `Package.swift` for MVP
+- Deployment: iOS 17+. Link **system** `RoomPlan` + `ARKit` + `RealityKit` via Xcode; **no CocoaPods**, no root `Package.swift` for MVP
 - Scan UI: `RoomCaptureView` + `RoomCaptureViewDelegate` (not `RoomCaptureSessionDelegate` unless leaving the stock view)
-- Persist with `CapturedRoom` Codable; export USDZ via `CapturedRoom.export`; preview with Quick Look
+- Persist `CapturedRoom` Codable; export USDZ via `CapturedRoom.export`
+- In-app preview: RealityKit `ARView` in `.nonAR` walkthrough (`RoomPreviewView` / `RoomWalkthroughARView`)
+- Do not wrap `QLPreviewController` for in-app preview
+- Share still sends USDZ; receivers may open it in system Quick Look
 - Do not invent coaching copy — `RoomCaptureView` already instructs the user
 - Exhaustive `switch` on RoomPlan enums (`Confidence`, categories): `default` must assign `never`
 
