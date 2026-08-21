@@ -1,0 +1,41 @@
+---
+description: Hard guardrails for shell, Xcode, and sandbox commands so agents cannot destroy the SceneShift project when tools fail or escalate.
+alwaysApply: true
+---
+
+# SceneShift command guardrails
+
+When shell tools fail, escalate carefully. Do not "fix" sandbox or Simulator errors by destroying project structure.
+
+## Never without an explicit user request
+
+- Delete or recreate `sceneshift.xcworkspace` or `SceneShift.xcodeproj` (`rm -rf`, move-aside-and-rebuild, empty `contents.xcworkspacedata`)
+- `git reset --hard`, `git clean -fdx`, force push, or rewrite published history
+- Wipe `SceneShift/`, `SceneShiftTests/`, or `SceneShiftUITests/`
+- Change bundle id, deployment target, or shared scheme as a side effect of troubleshooting
+
+## Prefer repair in place
+
+- If the workspace looks broken, edit `sceneshift.xcworkspace/contents.xcworkspacedata` so it references `group:SceneShift.xcodeproj`
+- If paths look wrong, move folders back to repo-root siblings of the `.xcodeproj` — do not invent a second project
+- If `xcodebuild` says a workspace is invalid under the sandbox, retry with elevated permissions before concluding the file is bad
+
+## Sandbox and Simulator escalation
+
+- Default sandbox cannot use `CoreSimulatorService`. That is expected.
+- Request `all` / unrestricted only for compile, `simctl`, or DerivedData writes — not for destructive cleanup
+- Use repo-local `-derivedDataPath .derivedData` for agent builds
+- Do not delete Simulator devices, runtimes, or DerivedData outside the repo to "unblock" a build
+
+## Stop and ask the user when
+
+- A fix seems to require deleting the workspace or project
+- A command would remove more than the files touched by the current task
+- Auto-review / policy blocks a destructive command — do not bypass by rewriting the same delete another way
+- You are unsure whether a failure is sandbox vs real project corruption
+
+## Safe verification pattern
+
+1. `xcodebuild -list -workspace sceneshift.xcworkspace`
+2. Build with `-derivedDataPath .derivedData` and `generic/platform=iOS Simulator` when only compile proof is needed
+3. Use a named Simulator destination only with full host access and only when UI/runtime proof is required
