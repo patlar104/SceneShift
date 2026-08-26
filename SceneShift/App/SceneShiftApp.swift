@@ -2,9 +2,12 @@ import SwiftUI
 
 @main
 struct SceneShiftApp: App {
+    @StateObject private var scanStore = ScanStore()
+
     var body: some Scene {
         WindowGroup {
-            Text("SceneShift") // replaced in Task 3
+            HomeView()
+                .environmentObject(scanStore)
         }
     }
 }
