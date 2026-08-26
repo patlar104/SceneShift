@@ -1,5 +1,6 @@
 import RealityKit
 import XCTest
+
 @testable import SceneShift
 
 final class WalkthroughCameraTests: XCTestCase {
@@ -63,7 +64,8 @@ final class WalkthroughGestureSessionTests: XCTestCase {
 
     private func dragLook(_ session: inout WalkthroughGestureSession, to translation: CGSize) {
         session.lookBegan(translation: .zero, touchCount: 1)
-        session.lookChanged(translation: CGSize(width: WalkthroughGestureSession.lookDeadzone, height: 0), touchCount: 1)
+        session.lookChanged(
+            translation: CGSize(width: WalkthroughGestureSession.lookDeadzone, height: 0), touchCount: 1)
         session.lookChanged(translation: translation, touchCount: 1)
     }
 

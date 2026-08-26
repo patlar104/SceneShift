@@ -16,6 +16,7 @@ Follow [The Swift Programming Language](https://www.swift.org/documentation/) an
 - Share still sends USDZ; receivers may open it in system Quick Look
 - Do not invent coaching copy — `RoomCaptureView` already instructs the user
 - Exhaustive `switch` on RoomPlan enums (`Confidence`, categories): `default` must assign `never`
+- Format with Apple `swift-format` (`.swift-format`, 4 spaces). Lint quality with SwiftLint (`.swiftlint.yml`). Cursor tasks: **Swift: Format**, **Swift: Format lint**, **SwiftLint**. Do not add CocoaPods for these tools.
 
 ```swift
 // ❌ BAD

@@ -1,6 +1,29 @@
 {
-  "attribution": {
-    "attributeCommitsToAgent": true,
-    "attributePRsToAgent": true
+  "permissions": {
+    "allow": [
+      "Shell(git)",
+      "Shell(xcodebuild)",
+      "Shell(xcrun)",
+      "Shell(swift)",
+      "Shell(npm)",
+      "Shell(npx)",
+      "Shell(node)",
+      "Shell(ls)",
+      "Shell(cat)",
+      "Shell(rg)",
+      "WebFetch(developer.apple.com)",
+      "WebFetch(docs.swift.org)",
+      "WebFetch(swift.org)",
+      "WebFetch(cursor.com)",
+      "WebFetch(*.cursor.com)",
+      "Mcp(xcode-tools:*)"
+    ],
+    "deny": [
+      "Read(scripts/.env)",
+      "Read(**/.env)",
+      "Write(scripts/.env)",
+      "Write(**/.env)",
+      "Write(**/*.key)"
+    ]
   }
 }

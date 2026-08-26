@@ -1,1 +1,56 @@
-{}
+{
+  "terminalAllowlist": [
+    "git status",
+    "git diff",
+    "git log",
+    "git show",
+    "git branch",
+    "git rev-parse",
+    "git ls-files",
+    "xcodebuild",
+    "xcrun",
+    "swift",
+    "npm",
+    "npx",
+    "node",
+    "rg",
+    "cat",
+    "ls",
+    "head",
+    "which"
+  ],
+  "mcpAllowlist": [
+    "xcode-tools:XcodeRead",
+    "xcode-tools:XcodeGrep",
+    "xcode-tools:XcodeGlob",
+    "xcode-tools:XcodeLS",
+    "xcode-tools:XcodeListWindows",
+    "xcode-tools:XcodeListNavigatorIssues",
+    "xcode-tools:XcodeRefreshCodeIssuesInFile",
+    "xcode-tools:BuildProject",
+    "xcode-tools:GetBuildLog",
+    "xcode-tools:GetTestList",
+    "xcode-tools:RunAllTests",
+    "xcode-tools:RunSomeTests",
+    "xcode-tools:DocumentationSearch",
+    "xcode-tools:RenderPreview",
+    "xcode-tools:ExecuteSnippet"
+  ],
+  "autoRun": {
+    "allow_instructions": [
+      "Read-only git (status, diff, log, show) and xcodebuild -showdestinations or -showsdks are fine.",
+      "xcodebuild test or build for the SceneShift scheme on an iOS Simulator destination is expected.",
+      "npm ci and npm run typecheck inside scripts/ are expected.",
+      "Fetching Apple RoomPlan, Swift language, SwiftPM, and Cursor SDK docs is expected."
+    ],
+    "block_instructions": [
+      "Never print, commit, or paste CURSOR_API_KEY or scripts/.env.",
+      "Do not git push --force, amend published history, skip hooks, or rewrite git config.",
+      "Do not clone FastAPI templates, add CocoaPods or Carthage, or scaffold backend/ or frontend/.",
+      "Do not start the next numbered plan task until the user approves.",
+      "Do not invent CapturedRoom fixture JSON or commit USDZ binaries from airdroped-tests/.",
+      "Xcode MCP write or delete tools (XcodeWrite, XcodeUpdate, XcodeRM, XcodeMV) should ask first.",
+      "Do not change DEVELOPMENT_TEAM, bundle id, or code signing unless the user asked."
+    ]
+  }
+}

@@ -47,3 +47,20 @@
 ## Current work
 
 Read `PROGRESS.md` for the active task, branch, optional cloud agent id (`bc-…`), and blockers. Implement that task only.
+
+## Learned User Preferences
+
+- Use skills and official docs to verify APIs, frameworks, and tooling; do not rely on pretrained knowledge alone
+- During audits or config work, preserve the existing working tree; do not reset, stash, clean, or discard unrelated user changes
+- Do not commit machine-specific Xcode or editor settings (development team, physical device IDs, local LLDB or toolchain paths)
+- SwiftLint (`.swiftlint.yml`) and Apple swift-format (`.swift-format`) are expected for local Swift quality; use Cursor/VS Code tasks **SwiftLint**, **Swift: Format**, and **Swift: Format lint**
+
+## Learned Workspace Facts
+
+- Shared `project.pbxproj` has no committed development team; configure device signing locally in Xcode (Signing & Capabilities)
+- Omit `.cursor/environment.json` until both `scripts/package.json` and `scripts/package-lock.json` exist; do not leave a broken `npm ci` bootstrap
+- `.cursor/cli.json` must follow the current Cursor CLI schema (`permissions` only; no unsupported top-level keys such as `attribution`)
+- `.cursor/hooks/state/` is local agent state and is gitignored
+- Project MCP server is `xcode-tools` via `xcrun mcpbridge` (enable Intelligence/MCP in Xcode with the project open)
+- CI and local simulator tests prefer iPhone 16, then iPhone 17, then the first available iPhone from `xcodebuild -showdestinations`
+- Do not commit USDZ binaries or files under `airdroped-tests/`

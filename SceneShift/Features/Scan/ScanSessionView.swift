@@ -111,7 +111,8 @@ struct ScanSessionView: View {
         ContentUnavailableView(
             "LiDAR required",
             systemImage: "viewfinder",
-            description: Text("Room scanning needs an iPhone or iPad with a LiDAR Scanner. The simulator cannot capture rooms.")
+            description: Text(
+                "Room scanning needs an iPhone or iPad with a LiDAR Scanner. The simulator cannot capture rooms.")
         )
     }
 

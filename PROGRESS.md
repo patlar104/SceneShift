@@ -9,7 +9,7 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 - Last cloud agent: none
 - Blockers: none — `[device-only]` preview/share/rename/delete/disk-full is for the human; do not block merge. Re-verify on device: one-finger drag looks without sliding; two-finger slides; pinch dollies; Reset; spinner still dismisses; share still sends USDZ.
 - Fixture: full `CapturedRoom` JSON round-trip still waits for `SceneShiftTests/Fixtures/sample.room`. Export one real scan during a device test. Do not invent JSON.
-- Signing: `DEVELOPMENT_TEAM = LX83XRP475` is in `project.pbxproj` (Automatic, bundle `com.sceneshift.app`). Not xcuserdata-only.
+- Signing: No development team is committed in shared `project.pbxproj` settings (bundle `com.sceneshift.app` remains). Configure a Team locally in Xcode under Signing & Capabilities before running on a device.
 
 ## Completed
 

@@ -1,0 +1,72 @@
+# Quality lint for SceneShift. Layout (indent, wrapping, imports) is Apple
+# swift-format via .swift-format — keep those rules disabled here.
+# Install: brew install swiftlint
+# Run: Terminal → Run Task → SwiftLint, or `swiftlint lint`
+
+included:
+  - SceneShift
+  - SceneShiftTests
+
+excluded:
+  - scripts
+  - .build
+  - Carthage
+  - DerivedData
+  - airdroped-tests
+
+opt_in_rules:
+  - empty_count
+  - contains_over_filter_count
+  - contains_over_first_not_nil
+  - first_where
+  - last_where
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - yoda_condition
+  - overridden_super_call
+  - prohibited_super_call
+  - fatal_error_message
+  - explicit_init
+  - force_unwrapping
+
+disabled_rules:
+  - trailing_whitespace
+  - trailing_comma
+  - opening_brace
+  - todo
+  - multiple_closures_with_trailing_closure
+  - line_length
+  - indentation_width
+  - sorted_imports
+
+file_length:
+  warning: 400
+  error: 800
+
+type_body_length:
+  warning: 300
+  error: 500
+
+function_body_length:
+  warning: 80
+  error: 150
+
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - id
+    - x
+    - y
+    - z
+    - i
+    - j
+    - ok
+
+nesting:
+  type_level: 3
+
+force_unwrapping:
+  severity: warning
+
+reporter: xcode

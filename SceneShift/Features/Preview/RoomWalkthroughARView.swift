@@ -83,7 +83,8 @@ struct RoomWalkthroughARView: UIViewRepresentable {
             installedEntity = entity
 
             let bounds = entity.visualBounds(relativeTo: nil)
-            let framed = bounds.isEmpty
+            let framed =
+                bounds.isEmpty
                 ? WalkthroughCamera(eye: SIMD3(0, 1.5, 2), yaw: 0, pitch: 0)
                 : WalkthroughCamera.framed(in: bounds)
             initialCamera = framed
@@ -238,6 +239,6 @@ private func configureNonAR(_ view: ARView) {
         .disableMotionBlur,
         .disableCameraGrain,
         .disableGroundingShadows,
-        .disableAREnvironmentLighting
+        .disableAREnvironmentLighting,
     ]
 }

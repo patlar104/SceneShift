@@ -1,6 +1,10 @@
 {
   "recommendations": [
-    "sswg.swift-lang",
-    "sweetpad.sweetpad"
+    "swiftlang.swift-vscode",
+    "sweetpad.sweetpad",
+    "vknabel.vscode-swiftlint"
+  ],
+  "unwantedRecommendations": [
+    "sswg.swift-lang"
   ]
 }

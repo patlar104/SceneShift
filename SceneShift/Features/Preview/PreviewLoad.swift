@@ -69,7 +69,7 @@ enum PreviewLoad {
                 }
                 box.cancellable = Entity.loadAsync(contentsOf: url).sink(
                     receiveCompletion: { completion in
-                        if case let .failure(error) = completion {
+                        if case .failure(let error) = completion {
                             box.fail?(error)
                         }
                         box.cancellable = nil

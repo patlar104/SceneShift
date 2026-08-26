@@ -228,10 +228,12 @@ struct WalkthroughGestureSession {
             translation.height - twoFingerOriginTranslation.height
         )
         let scaleDelta = abs(scale - twoFingerOriginScale)
-        let translationScore = strafeRecognizerActive
+        let translationScore =
+            strafeRecognizerActive
             ? translationMagnitude / Self.strafeTranslationDominance
             : 0
-        let scaleScore = pinchRecognizerActive
+        let scaleScore =
+            pinchRecognizerActive
             ? scaleDelta / Self.pinchScaleDominance
             : 0
         guard translationScore >= 1 || scaleScore >= 1 else { return }

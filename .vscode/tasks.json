@@ -14,6 +14,49 @@
       "command": "if [ -f scripts/package.json ]; then npm run typecheck --prefix scripts; else echo 'scripts/ not present yet (Task 5); skipping typecheck.'; fi",
       "problemMatcher": [],
       "group": "build"
+    },
+    {
+      "label": "Swift: Format",
+      "type": "shell",
+      "command": "xcrun swift-format format --in-place --recursive --configuration .swift-format SceneShift SceneShiftTests",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Swift: Format lint",
+      "type": "shell",
+      "command": "xcrun swift-format lint --recursive --configuration .swift-format SceneShift SceneShiftTests",
+      "problemMatcher": {
+        "owner": "swift-format",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+): (warning|error): (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      },
+      "group": "test"
+    },
+    {
+      "label": "SwiftLint",
+      "type": "shell",
+      "command": "swiftlint lint --config .swiftlint.yml",
+      "problemMatcher": {
+        "owner": "swiftlint",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+): (warning|error): (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      },
+      "group": "test"
     }
   ]
 }

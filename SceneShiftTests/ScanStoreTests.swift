@@ -8,7 +8,7 @@ import XCTest
 /// (only `init(from: Decoder)`); do not invent JSON that will not decode.
 @MainActor
 final class ScanStoreTests: XCTestCase {
-    private var directory: URL!
+    private var directory = FileManager.default.temporaryDirectory
 
     override func setUpWithError() throws {
         directory = FileManager.default.temporaryDirectory
@@ -17,10 +17,7 @@ final class ScanStoreTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        if let directory {
-            try? FileManager.default.removeItem(at: directory)
-        }
-        directory = nil
+        try? FileManager.default.removeItem(at: directory)
     }
 
     func testSaveAndLoadRoundTrip() throws {
@@ -42,6 +39,7 @@ final class ScanStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.scans.map(\.name), ["Living Room"])
         XCTAssertEqual(reloaded.scans.map(\.roomFileName), [saved.roomFileName])
         XCTAssertNil(reloaded.scans.first?.usdzFileName)
+        XCTAssertNil(reloaded.indexLoadError)
     }
 
     func testRenameUpdatesIndex() throws {
@@ -140,6 +138,15 @@ final class ScanStoreTests: XCTestCase {
         XCTAssertFalse(published)
         XCTAssertEqual(reloaded.scans.first?.usdzFileName, usdzName)
         _ = cancellable
+    }
+
+    func testCorruptIndexSetsLoadError() throws {
+        try Data("{ not valid json".utf8).write(to: directory.appendingPathComponent("scans.json"))
+
+        let store = ScanStore(directory: directory)
+
+        XCTAssertTrue(store.scans.isEmpty)
+        XCTAssertEqual(store.indexLoadError, .corruptIndex)
     }
 
     func testScanPreviewContainerInitDoesNotExport() throws {
