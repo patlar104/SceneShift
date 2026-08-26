@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import SceneShift
 
@@ -7,7 +8,7 @@ import XCTest
 /// (only `init(from: Decoder)`); do not invent JSON that will not decode.
 @MainActor
 final class ScanStoreTests: XCTestCase {
-    private var directory: URL!
+    private var directory = FileManager.default.temporaryDirectory
 
     override func setUpWithError() throws {
         directory = FileManager.default.temporaryDirectory
@@ -16,10 +17,7 @@ final class ScanStoreTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        if let directory {
-            try? FileManager.default.removeItem(at: directory)
-        }
-        directory = nil
+        try? FileManager.default.removeItem(at: directory)
     }
 
     func testSaveAndLoadRoundTrip() throws {
@@ -41,6 +39,7 @@ final class ScanStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.scans.map(\.name), ["Living Room"])
         XCTAssertEqual(reloaded.scans.map(\.roomFileName), [saved.roomFileName])
         XCTAssertNil(reloaded.scans.first?.usdzFileName)
+        XCTAssertNil(reloaded.indexLoadError)
     }
 
     func testRenameUpdatesIndex() throws {
@@ -99,5 +98,69 @@ final class ScanStoreTests: XCTestCase {
         let saved = try store.save(roomData: Data("not-a-captured-room".utf8), name: "Stub")
 
         XCTAssertThrowsError(try store.loadRoom(for: saved))
+    }
+
+    func testFileSizeDoesNotMutateScans() throws {
+        let store = ScanStore(directory: directory)
+        let saved = try store.save(roomData: Data(repeating: 0xAB, count: 64), name: "Sized")
+        let scansBefore = store.scans
+        var published = false
+        let cancellable = store.objectWillChange.sink { published = true }
+
+        _ = store.fileSize(for: saved)
+
+        XCTAssertFalse(published)
+        XCTAssertEqual(store.scans, scansBefore)
+        _ = cancellable
+    }
+
+    func testCachedUSDZExportDoesNotMutatePublishedScans() throws {
+        let store = ScanStore(directory: directory)
+        let saved = try store.save(roomData: Data("stub".utf8), name: "Cached")
+        let usdzName = "\(saved.id.uuidString).usdz"
+        try Data("usdz".utf8).write(to: directory.appendingPathComponent(usdzName))
+
+        var indexed = saved
+        indexed.usdzFileName = usdzName
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode([indexed]).write(to: directory.appendingPathComponent("scans.json"))
+
+        let reloaded = ScanStore(directory: directory)
+        let scan = try XCTUnwrap(reloaded.scans.first)
+        var published = false
+        let cancellable = reloaded.objectWillChange.sink { published = true }
+
+        let url = try reloaded.exportUSDZ(for: scan)
+
+        XCTAssertEqual(url.lastPathComponent, usdzName)
+        XCTAssertFalse(published)
+        XCTAssertEqual(reloaded.scans.first?.usdzFileName, usdzName)
+        _ = cancellable
+    }
+
+    func testCorruptIndexSetsLoadError() throws {
+        try Data("{ not valid json".utf8).write(to: directory.appendingPathComponent("scans.json"))
+
+        let store = ScanStore(directory: directory)
+
+        XCTAssertTrue(store.scans.isEmpty)
+        XCTAssertEqual(store.indexLoadError, .corruptIndex)
+    }
+
+    func testScanPreviewContainerInitDoesNotExport() throws {
+        let store = ScanStore(directory: directory)
+        let saved = try store.save(roomData: Data("stub".utf8), name: "Preview")
+        let scansBefore = store.scans
+        var published = false
+        let cancellable = store.objectWillChange.sink { published = true }
+
+        _ = ScanPreviewContainer(scanID: saved.id)
+
+        XCTAssertFalse(published)
+        XCTAssertEqual(store.scans, scansBefore)
+        XCTAssertNil(store.scans.first?.usdzFileName)
+        _ = cancellable
     }
 }

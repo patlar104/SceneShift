@@ -1,0 +1,24 @@
+# Credentials and secrets
+scripts/.env
+.env
+.env.*
+**/*.key
+**/*.pem
+
+# Node dependencies (Task 5)
+scripts/node_modules/
+
+# Build products and Xcode artifacts
+.build/
+DerivedData/
+**/*.dSYM/
+**/*.dSYM.zip
+**/*.ipa
+**/*.hmap
+
+# Local / generated state
+.DS_Store
+.cursor/hooks/state/
+
+# Device test artifacts — do not index USDZ binaries
+airdroped-tests/

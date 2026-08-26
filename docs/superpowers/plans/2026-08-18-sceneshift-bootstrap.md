@@ -15,7 +15,7 @@ todos:
     content: Build RoomPlan scan flow (RoomCaptureRepresentable, ScanSessionView, LiDAR guard)
     status: pending
   - id: task-4-preview
-    content: Add Quick Look preview, USDZ export, share sheet, delete from library
+    content: Add RealityKit walkthrough preview, USDZ export, share sheet, delete from library
     status: pending
   - id: task-5-sdk
     content: "scripts/ package: local + cloud Cursor SDK CLIs (Node 22.13, npm, pinned @cursor/sdk)"
@@ -40,14 +40,14 @@ isProject: false
 
 **Architecture:** Use Apple's **RoomPlan** (`RoomCaptureView` + `CapturedRoom`) for scanning and USDZ export instead of building a custom ARKit mesh pipeline. SwiftUI for navigation; a thin `ScanStore` service for local persistence via `CapturedRoom`'s Codable support. A separate **`scripts/`** TypeScript package uses `@cursor/sdk` (local runtime, `Agent.create` + `run.wait()`) for dev automation only — not app runtime, not a production API server.
 
-**Tech Stack:** Swift 5.9+, SwiftUI, RoomPlan, ARKit, Quick Look, iOS 17+, Xcode 15+, **SPM only** (no CocoaPods). Dev tooling: **Node 22.13+**, **npm**, TypeScript ESM, **tsx**, `@cursor/sdk` (pinned, not `latest`).
+**Tech Stack:** Swift 5.9+, SwiftUI, RoomPlan, ARKit, RealityKit, iOS 17+, Xcode 15+, **SPM only** (no CocoaPods). Dev tooling: **Node 22.13+**, **npm**, TypeScript ESM, **tsx**, `@cursor/sdk` (pinned, not `latest`). Share still sends USDZ (receivers may open it in system Quick Look).
 
 ## Global Constraints
 
 - **Platform:** iOS native only for v1; LiDAR device required for scanning (iPhone 12 Pro+ / iPad Pro 2020+).
 - **Deployment target:** iOS 17.0 (RoomPlan export APIs stable; aligns with `.gitignore` Xcode setup).
 - **On-device only:** No custom HTTP/REST/GraphQL backend, auth, or cloud sync in this milestone. Apple first-party APIs only.
-- **Frameworks over custom code:** RoomPlan for scan + export + coaching + dimensions; Quick Look for preview; no custom mesh reconstruction, floor-plan ML, or third-party scan SDKs.
+- **Frameworks over custom code:** RoomPlan for scan + export + coaching + dimensions; RealityKit non-AR walkthrough for in-app preview; no custom mesh reconstruction, floor-plan ML, or third-party scan SDKs. Do not wrap `QLPreviewController` for in-app preview. Share still sends USDZ.
 - **YAGNI folder rule:** Only create directories/files listed in this plan; no empty "future" modules (no `Networking/`, `Auth/`, `API/`, `ML/` yet).
 - **Do not vendor-integrate:** Matterport, Polycam, magicplan, Canvas, CubiCasa, Cesium, Omniverse, BIM/IFC APIs. Those are competing products or later-phase toolchains, not v1 dependencies.
 
@@ -374,7 +374,8 @@ Sources: [RoomPlan docs](https://developer.apple.com/documentation/roomplan), [C
 | Dimensions | `CapturedRoom.Surface` / `Object` `dimensions` + `confidence` | Measurement engine or laser-API |
 | Object types | RoomPlan taxonomy (walls, doors, windows, openings, floors, ~16 household objects) | Custom detector |
 | Export 3D | `capturedRoom.export(to:exportOptions:)` USD/USDZ | Mesh pipeline |
-| Preview | Quick Look | RealityKit viewer (later) |
+| Preview | RealityKit non-AR walkthrough (`RoomPreviewView` / `RoomWalkthroughARView`) | `QLPreviewController` wrapper for in-app preview |
+| Shared USDZ | System Quick Look on the receiving device (AirDrop/Files) | Custom share renderer |
 | Post-process | `RoomBuilder(options: [.beautifyObjects])` if using session path | Custom beautify |
 
 ### First-party APIs that look like "backend" but are not
@@ -399,7 +400,7 @@ Apple/research limits to put in README, not to "fix" with custom code:
 - Best for ~30×30 ft (9×9 m) residential rooms; lighting ≥ ~50 lux; avoid scans longer than ~5 minutes (thermal/drift) — [WWDC22 10127](https://developer.apple.com/videos/play/wwdc2022/10127)
 - Rectangular simplification; limited object set; not industrial/precision; reported ~±5 cm wall drift; walls modeled ~16 cm thick — [it-jim](https://www.it-jim.com/blog/apple-roomplan-api)
 - Multi-room: `StructureBuilder` / `CapturedStructure`; WWDC23: ~2,000 sq ft single-floor residential; keep ARSession alive across rooms via `stop(pauseARSession: false)`
-- **Missing vs competitors if we only ship USDZ Quick Look:** 2D floor plan view, editable wall dimensions, DXF/PDF export. Those are later features *on top of* `CapturedRoom` parametric data — still no HTTP API.
+- **Missing vs competitors if we only ship USDZ Quick Look (share path):** 2D floor plan view, editable wall dimensions, DXF/PDF export. Those are later features *on top of* `CapturedRoom` parametric data — still no HTTP API. In-app preview is a RealityKit walkthrough; Quick Look remains the **share receiver** limitation, not the in-app viewer.
 
 ### Correction to earlier plan (coaching)
 
@@ -416,7 +417,8 @@ Sources: [Cursor TypeScript SDK](https://cursor.com/docs/sdk/typescript), [SDK c
 | Choice | Verdict | Why | Reject |
 |--------|---------|-----|--------|
 | **Swift + SwiftUI + RoomPlan** | **Use** | Only first-class path to LiDAR room capture + parametric export on iOS | — |
-| RealityKit in-app viewer | Defer | Quick Look enough for MVP; RealityKit for AR furniture placement later | Building now |
+| RealityKit in-app walkthrough | **Use** | `ARView(cameraMode: .nonAR)` in `RoomPreviewView` / `RoomWalkthroughARView` | Wrapping `QLPreviewController` for in-app preview |
+| AR furniture / object placement | Defer | Later RealityKit AR; walkthrough preview stays non-AR | Building furniture placement now |
 | Unity / Unreal | Reject v1 | Extra bundle size, glue to native AR APIs | [Davey Knific comparison](https://www.daveyknific.com/journal/realitykit-vs-ar-foundation.html) |
 | React Native / Flutter RoomPlan plugins | Reject v1 | Not first-class Apple APIs; limits AR control | [expo-roomplan](https://github.com/fordat/expo-roomplan), [flutter_roomplan](https://pub.dev/packages/flutter_roomplan) |
 | **SPM** for iOS deps | **Use** | Modern default; no Pods directory | CocoaPods (legacy unless a dep requires it) |
@@ -462,7 +464,7 @@ flowchart TB
   subgraph runtime [App Runtime - Swift]
     SwiftUI --> RoomPlan
     RoomPlan --> ScanStore
-    ScanStore --> QuickLook
+    ScanStore --> RealityKitWalkthrough["RealityKit walkthrough"]
   end
   subgraph devonly [Dev Only - Node 22.13]
     npm --> tsx
@@ -524,7 +526,7 @@ SceneShift/
 │   │   ├── Scan/
 │   │   │   ├── RoomCaptureRepresentable.swift  # UIViewRepresentable wrapper
 │   │   │   └── ScanSessionView.swift             # scan UI + delegate wiring
-│   │   └── Preview/RoomPreviewView.swift         # Quick Look wrapper
+│   │   └── Preview/RoomPreviewView.swift         # RealityKit walkthrough host (non-AR ARView)
 │   ├── Services/ScanStore.swift       # save/load/list/delete CapturedRoom + metadata
 │   ├── Models/SavedScan.swift         # id, name, createdAt, file URLs
 │   └── Supporting/
@@ -768,22 +770,25 @@ Reference (primary): [RoomPlan — Create a 3D model of an interior room](https:
 
 ### Task 4: Preview and USDZ Export/Share
 
+**Decided path (shipped):** in-app RealityKit non-AR walkthrough. Do not wrap `QLPreviewController` for in-app preview. Share still sends USDZ; receivers may open it in system Quick Look.
+
 **Files:**
 - Create: `SceneShift/Features/Preview/RoomPreviewView.swift`
+- Create: `SceneShift/Features/Preview/RoomWalkthroughARView.swift` (USDZ → `Entity`, `ARView(cameraMode: .nonAR)`)
 - Modify: `SceneShift/Features/Home/HomeView.swift`
 
 **Interfaces:**
 - Consumes: `ScanStore.loadRoom(for:)`, `ScanStore.exportUSDZ(for:)`
-- Produces: `RoomPreviewView(url: URL)` using Quick Look; share sheet for USDZ
+- Produces: `RoomPreviewView(url: URL)` RealityKit walkthrough host; share sheet for USDZ
 
-- [ ] **Step 1:** Implement `RoomPreviewView` as `QLPreviewController` wrapper (UIViewControllerRepresentable)
-- [ ] **Step 2:** Home list row tap → navigate to preview (export USDZ if not cached, then show Quick Look)
+- [ ] **Step 1:** Load USDZ into a RealityKit `Entity`; present it in `ARView(cameraMode: .nonAR)` (`RoomWalkthroughARView`). Exclusive 1-finger look / 2-finger strafe / pinch dolly, plus Reset. Do not wrap `QLPreviewController`.
+- [ ] **Step 2:** Home list row tap → navigate to preview (export USDZ if not cached, then show the walkthrough)
 - [ ] **Step 2b:** Show formatted file size per scan row via `ScanStore.fileSize(for:)` (e.g. "12.4 MB")
 - [ ] **Step 3:** Add swipe-to-delete on list rows calling `ScanStore.delete`
 - [ ] **Step 3b:** Add rename: swipe action or context menu → alert with TextField → `ScanStore.rename(_:to:)`
 - [ ] **Step 4:** Add Share button using `ShareLink` or `UIActivityViewController` with exported USDZ URL
 - [ ] **Step 4b:** Handle disk-full on export: catch write errors, show alert "Not enough storage to export scan" instead of silent failure; do not delete temp USDZ until share sheet completes
-- [ ] **Step 5:** Manual test: open saved scan, preview in Quick Look, share via AirDrop/Files
+- [ ] **Step 5:** Manual test: open saved scan, walkthrough look/strafe/pinch + Reset, share USDZ via AirDrop/Files (receivers may open in system Quick Look)
 - [ ] **Step 6:** Commit: `feat: add room preview and USDZ share export`
 
 ---
@@ -1046,11 +1051,11 @@ No UI test suite in MVP—RoomPlan requires hardware.
 ## Spec Coverage Self-Review
 
 - LiDAR scan: Task 3 (RoomPlan)
-- View capture: Task 4 (Quick Look)
+- View capture: Task 4 (RealityKit non-AR walkthrough)
 - Export: Task 4 (`CapturedRoom.export`)
 - On-device only: enforced by Global Constraints; no backend tasks
 - Avoid confusion: explicit defer list; minimal folders
-- Best frameworks: RoomPlan + SwiftUI + Quick Look (not custom API layer)
+- Best frameworks: RoomPlan + SwiftUI + RealityKit walkthrough (not custom API layer; Quick Look is share-receiver only)
 - Cursor SDK: Task 5 (local + **cloud** handoff CLIs)
 - Cloud continuation: Task 0 (`AGENTS.md`, `PROGRESS.md`, plan in repo, CI, GitHub push)
 - Stack matrix: Swift/SPM/RoomPlan + Node dev scripts; Vapor/FastAPI/CloudKit deferred
@@ -1066,11 +1071,13 @@ No placeholders remain in task steps; all file paths and interfaces are concrete
 > **Review method:** `requesting-code-review` skill pattern — dispatched to review subagent; interrupted before completion. Review completed inline and saved here + Task 0 `docs/superpowers/reviews/` on execution.
 >
 > **Verdict:** **Ready to execute with fixes** (patches applied below in this plan).
+>
+> **Post-review note:** In-app preview switched from Quick Look to a RealityKit non-AR walkthrough after Quick Look’s orbit camera proved a poor room walkthrough; the USDZ share path is unchanged (AirDrop/Files receivers may still open the file in system Quick Look).
 
 ### Strengths
 
-- **Requirements alignment:** Delivers LiDAR scan → local save → Quick Look preview → USDZ share without backend, auth, or third-party scan SDKs — matches stated MVP.
-- **Research-backed stack:** RoomPlan + SwiftUI + Quick Look is the correct first-party path; explicit rejection of FastAPI template clone, CocoaPods, Bun, and competitor SDKs reduces agent drift.
+- **Requirements alignment:** Delivers LiDAR scan → local save → RealityKit walkthrough preview → USDZ share without backend, auth, or third-party scan SDKs — matches stated MVP.
+- **Research-backed stack:** RoomPlan + SwiftUI + RealityKit walkthrough is the correct first-party path; explicit rejection of FastAPI template clone, CocoaPods, Bun, and competitor SDKs reduces agent drift. In-app preview switched from Quick Look after its orbit camera proved a poor room walkthrough; the USDZ share path is unchanged.
 - **Cloud handoff surface:** `AGENTS.md`, `PROGRESS.md`, committed plan copy, branch-per-task, `[cloud-verify]` / `[device-only]` split — strong foundation for Cursor Cloud Agents.
 - **API landscape section:** Documents RoomPlan limits, coaching via `RoomCaptureView`, CloudKit 50 MB caveat, and deferred Foundation Models — prevents premature “fix with custom code.”
 - **Task interfaces:** `ScanStore` / `SavedScan` signatures are concrete; Task 8 correctly scopes to parametric list, not 2D CAD.
@@ -1259,7 +1266,7 @@ npm run cloud:resume -- bc-xxxxxxxx
 ```
 On LiDAR iPhone: Xcode → Signing → Run (Cmd+R).
 [ ] New Scan completes and saves to library
-[ ] Preview opens in Quick Look
+[ ] Preview opens in the in-app RealityKit walkthrough (share USDZ may open in system Quick Look)
 [ ] Share USDZ via AirDrop/Files
 [ ] Rename / delete work
 [ ] (Task 3) Export sample.room → commit to SceneShiftTests/Fixtures/ if tests need it

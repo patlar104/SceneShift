@@ -1,6 +1,22 @@
 {
-  "files.exclude": { "**/.build": true, "scripts/node_modules": true },
-  "search.exclude": { "scripts/node_modules": true },
+  "files.exclude": {
+    "**/.build": true,
+    "scripts/node_modules": true
+  },
+  "search.exclude": {
+    "scripts/node_modules": true
+  },
   "typescript.tsdk": "scripts/node_modules/typescript/lib",
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "*.xcprivacy": "xml"
+  },
+  "[swift]": {
+    "editor.defaultFormatter": "swiftlang.swift-vscode",
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
+  },
+  "swiftlint.enable": true,
+  "swiftlint.configSearchPaths": [".swiftlint.yml"],
+  "swiftlint.onlyEnableWithConfig": true
 }

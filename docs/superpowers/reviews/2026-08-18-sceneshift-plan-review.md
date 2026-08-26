@@ -5,11 +5,13 @@ Copied from the implementation plan for cloud handoff (agents read the repo, not
 > **Review method:** `requesting-code-review` skill pattern — dispatched to review subagent; interrupted before completion. Review completed inline and saved here + Task 0 `docs/superpowers/reviews/` on execution.
 >
 > **Verdict:** **Ready to execute with fixes** (patches applied below in this plan).
+>
+> **Post-review note:** In-app preview switched from Quick Look to a RealityKit non-AR walkthrough after Quick Look’s orbit camera proved a poor room walkthrough; the USDZ share path is unchanged (AirDrop/Files receivers may still open the file in system Quick Look).
 
 ## Strengths
 
-- **Requirements alignment:** Delivers LiDAR scan → local save → Quick Look preview → USDZ share without backend, auth, or third-party scan SDKs — matches stated MVP.
-- **Research-backed stack:** RoomPlan + SwiftUI + Quick Look is the correct first-party path; explicit rejection of FastAPI template clone, CocoaPods, Bun, and competitor SDKs reduces agent drift.
+- **Requirements alignment:** Delivers LiDAR scan → local save → RealityKit walkthrough preview → USDZ share without backend, auth, or third-party scan SDKs — matches stated MVP.
+- **Research-backed stack:** RoomPlan + SwiftUI + RealityKit walkthrough is the correct first-party path; explicit rejection of FastAPI template clone, CocoaPods, Bun, and competitor SDKs reduces agent drift.
 - **Cloud handoff surface:** `AGENTS.md`, `PROGRESS.md`, committed plan copy, branch-per-task, `[cloud-verify]` / `[device-only]` split — strong foundation for Cursor Cloud Agents.
 - **API landscape section:** Documents RoomPlan limits, coaching via `RoomCaptureView`, CloudKit 50 MB caveat, and deferred Foundation Models — prevents premature “fix with custom code.”
 - **Task interfaces:** `ScanStore` / `SavedScan` signatures are concrete; Task 8 correctly scopes to parametric list, not 2D CAD.

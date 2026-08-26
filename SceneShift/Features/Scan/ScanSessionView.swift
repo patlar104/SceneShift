@@ -39,6 +39,7 @@ struct ScanSessionView: View {
                         isScanning = false
                         dismiss()
                     }
+                    .disabled(isProcessing)
                 }
                 if isLiDARAvailable {
                     ToolbarItem(placement: .confirmationAction) {
@@ -111,7 +112,8 @@ struct ScanSessionView: View {
         ContentUnavailableView(
             "LiDAR required",
             systemImage: "viewfinder",
-            description: Text("Room scanning needs an iPhone or iPad with a LiDAR Scanner. The simulator cannot capture rooms.")
+            description: Text(
+                "Room scanning needs an iPhone or iPad with a LiDAR Scanner. The simulator cannot capture rooms.")
         )
     }
 
@@ -138,6 +140,7 @@ struct ScanSessionView: View {
     }
 
     private func handleComplete(_ result: Result<CapturedRoom, Error>) {
+        guard isProcessing else { return }
         isProcessing = false
         switch result {
         case .success(let room):
@@ -169,6 +172,7 @@ struct ScanSessionView: View {
         guard isLiDARAvailable else { return }
         guard isScanning, capturedRoom == nil, !isProcessing else { return }
         if newPhase == .background {
+            isScanning = false
             showInterruption = true
         }
     }

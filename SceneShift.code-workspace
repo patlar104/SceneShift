@@ -1,8 +1,31 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "name": "SceneShift",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.build": true,
+      "scripts/node_modules": true
+    },
+    "search.exclude": {
+      "scripts/node_modules": true
+    },
+    "editor.formatOnSave": true,
+    "files.associations": {
+      "*.xcprivacy": "xml"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "swiftlang.swift-vscode",
+      "sweetpad.sweetpad",
+      "vknabel.vscode-swiftlint"
+    ],
+    "unwantedRecommendations": [
+      "sswg.swift-lang"
+    ]
+  }
 }

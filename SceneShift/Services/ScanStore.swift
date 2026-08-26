@@ -1,14 +1,18 @@
 import Combine
 import Foundation
 import RoomPlan
+import os
 
 enum ScanStoreError: Error, Equatable {
     case scanNotFound
+    case corruptIndex
+    case fileDeletionFailed(String)
 }
 
 @MainActor
 final class ScanStore: ObservableObject {
     @Published private(set) var scans: [SavedScan] = []
+    @Published private(set) var indexLoadError: ScanStoreError?
 
     private let directory: URL
     private let fileManager: FileManager
@@ -16,6 +20,7 @@ final class ScanStore: ObservableObject {
     private let indexDecoder: JSONDecoder
     private let roomEncoder: JSONEncoder
     private let roomDecoder: JSONDecoder
+    private let logger = Logger(subsystem: "com.sceneshift.app", category: "ScanStore")
 
     init(directory: URL? = nil, fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -73,9 +78,9 @@ final class ScanStore: ObservableObject {
         guard scans.contains(where: { $0.id == scan.id }) else {
             throw ScanStoreError.scanNotFound
         }
-        try? fileManager.removeItem(at: roomURL(for: scan))
+        try removeFileIfExists(at: roomURL(for: scan))
         if let usdzFileName = scan.usdzFileName {
-            try? fileManager.removeItem(at: directory.appendingPathComponent(usdzFileName))
+            try removeFileIfExists(at: directory.appendingPathComponent(usdzFileName))
         }
         scans.removeAll { $0.id == scan.id }
         try persistIndex()
@@ -128,13 +133,17 @@ final class ScanStore: ObservableObject {
     private func loadIndex() {
         guard fileManager.fileExists(atPath: indexURL.path) else {
             scans = []
+            indexLoadError = nil
             return
         }
         do {
             let data = try Data(contentsOf: indexURL)
             scans = try indexDecoder.decode([SavedScan].self, from: data)
+            indexLoadError = nil
         } catch {
+            logger.error("Failed to load scan index: \(error.localizedDescription, privacy: .public)")
             scans = []
+            indexLoadError = .corruptIndex
         }
     }
 
@@ -151,5 +160,17 @@ final class ScanStore: ObservableObject {
     private func byteCount(at url: URL) -> Int64 {
         let values = try? url.resourceValues(forKeys: [.fileSizeKey])
         return Int64(values?.fileSize ?? 0)
+    }
+
+    private func removeFileIfExists(at url: URL) throws {
+        guard fileManager.fileExists(atPath: url.path) else { return }
+        do {
+            try fileManager.removeItem(at: url)
+        } catch {
+            logger.error(
+                "Failed to delete scan file \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)"
+            )
+            throw ScanStoreError.fileDeletionFailed(url.lastPathComponent)
+        }
     }
 }

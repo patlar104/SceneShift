@@ -15,13 +15,13 @@ Ship a LiDAR-capable native iOS app that scans a room, saves the capture locally
 SwiftUI (Home → Scan → Preview/Details)
     └── RoomPlan (RoomCaptureView → CapturedRoom)
             ├── ScanStore (Application Support/Scans/, Codable JSON + optional cached USDZ)
-            ├── Quick Look (QLPreviewController) for preview
+            ├── RealityKit non-AR walkthrough (`RoomPreviewView` / `RoomWalkthroughARView`)
             └── CapturedRoom.export → USDZ → share sheet
 ```
 
 Dev-only (not app runtime): `scripts/` TypeScript package using `@cursor/sdk` (local `Agent.create` + cloud `autoCreatePR`) for agent automation.
 
-**MVP SwiftPM shape:** Xcode `.xcodeproj` app linking **system frameworks** (`RoomPlan`, `ARKit`). No root `Package.swift` until a shared Swift module is extracted.
+**MVP SwiftPM shape:** Xcode `.xcodeproj` app linking **system frameworks** (`RoomPlan`, `ARKit`, `RealityKit`). No root `Package.swift` until a shared Swift module is extracted.
 
 ### Runtime components (Tasks 1–4, 8)
 
@@ -32,7 +32,7 @@ Dev-only (not app runtime): `scripts/` TypeScript package using `@cursor/sdk` (l
 | `RoomCaptureRepresentable` | `UIViewRepresentable` over `RoomCaptureView` + `RoomCaptureViewDelegate` |
 | `ScanSessionView` | Full-screen scan, name prompt, interruption Resume/Discard |
 | `ScanStore` / `SavedScan` | Local persist, rename, delete, file size, USDZ export |
-| `RoomPreviewView` | Quick Look wrapper |
+| `RoomPreviewView` | RealityKit walkthrough host (`RoomWalkthroughARView`, USDZ → `Entity`) |
 | `ScanDetailView` | Parametric walls/objects + dimensions + confidence |
 
 ### Explicitly not in runtime
@@ -46,7 +46,7 @@ Dev-only (not app runtime): `scripts/` TypeScript package using `@cursor/sdk` (l
 - **Platform:** iOS native only for v1. Scanning requires LiDAR (iPhone 12 Pro+ / iPad Pro 2020+).
 - **Deployment target:** iOS 17.0.
 - **On-device only:** No custom HTTP/REST/GraphQL backend, auth, or cloud sync in this milestone.
-- **Frameworks over custom code:** RoomPlan for scan + export + coaching + dimensions; Quick Look for preview.
+- **Frameworks over custom code:** RoomPlan for scan + export + coaching + dimensions; RealityKit non-AR walkthrough for in-app preview. Share still sends USDZ (receivers may open it in system Quick Look).
 - **iOS deps:** Swift Package Manager only — no CocoaPods, no Carthage dependencies.
 - **YAGNI:** Only create directories/files listed in the current task.
 - **Dev scripts:** Node **22.13+**, **npm**, TypeScript ESM/`NodeNext`, **tsx**, `@cursor/sdk` **pinned** (not `latest`). **Not Bun.**
@@ -119,12 +119,12 @@ Separate from FastAPI. Node 22.13+, npm, `scripts/` package. See plan Task 5. Ne
 - Auth, user accounts, StoreKit
 - Third-party scan/cloud SDKs
 - Custom LiDAR point-cloud processing / Object Capture (`PhotogrammetrySession`)
-- Furniture layout optimization; Apple Foundation Models (`LanguageModelSession`) — iOS 26+, Apple Intelligence devices
+- Furniture layout optimization; AR furniture / object placement in the scanned room (in-app preview is a non-AR RealityKit walkthrough)
+- Apple Foundation Models (`LanguageModelSession`) — iOS 26+, Apple Intelligence devices
 - Multi-room merge (`StructureBuilder` → `CapturedStructure`) until single-room works
 - 2D CAD/DXF/BIM export
 - macOS, visionOS, Android, cross-platform
 - `BGTaskScheduler` large-export backgrounding until export is slow on device
-- RealityKit in-app viewer (Quick Look is enough for MVP)
 - Unity / Unreal / React Native / Flutter RoomPlan plugins
 - XCUITest full suite (RoomPlan needs hardware)
 - Xcode Cloud, fastlane
