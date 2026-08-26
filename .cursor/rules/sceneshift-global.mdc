@@ -1,0 +1,18 @@
+---
+description: SceneShift stack constraints and handoff
+alwaysApply: true
+---
+
+# SceneShift global
+
+- iOS: Swift/SwiftUI/RoomPlan only; no CocoaPods, no FastAPI template clone, no `backend/` or `frontend/`
+- `scripts/`: Node 22.13+, npm, not Bun; `@cursor/sdk` pinned (never `latest`); never commit `CURSOR_API_KEY`
+- Read `AGENTS.md` + `PROGRESS.md` before multi-file work; implement the current task only
+- LiDAR device tests are `[device-only]`; do not block PRs on them
+- YAGNI: only files listed in the current plan task
+- One branch per task: `feat/task-N-short-name`; update `PROGRESS.md` before every push
+
+```text
+❌ BAD: clone fastapi/full-stack-fastapi-template, add Podfile, use Bun, start Task N+1 unapproved
+✅ GOOD: RoomPlan + SPM system frameworks; wait for user approval between tasks
+```

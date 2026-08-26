@@ -1,0 +1,25 @@
+---
+description: Swift/iOS and RoomPlan conventions for SceneShift
+globs: "**/*.swift"
+alwaysApply: false
+---
+
+# Swift / iOS
+
+Follow [The Swift Programming Language](https://www.swift.org/documentation/) and [API Design Guidelines](https://www.swift.org/documentation/). Names: `ScanStore`, `SavedScan`, `ScanSessionView`.
+
+- Deployment: iOS 17+. Link **system** `RoomPlan` + `ARKit` via Xcode; **no CocoaPods**, no root `Package.swift` for MVP
+- Scan UI: `RoomCaptureView` + `RoomCaptureViewDelegate` (not `RoomCaptureSessionDelegate` unless leaving the stock view)
+- Persist with `CapturedRoom` Codable; export USDZ via `CapturedRoom.export`; preview with Quick Look
+- Do not invent coaching copy — `RoomCaptureView` already instructs the user
+- Exhaustive `switch` on RoomPlan enums (`Confidence`, categories): `default` must assign `never`
+
+```swift
+// ❌ BAD
+func captureSession(_ session: RoomCaptureSession, didEndWith data: CapturedRoomData) {}
+
+// ✅ GOOD
+func captureView(shouldPresent roomData: CapturedRoomData, error: Error?) -> Bool { true }
+func captureView(didPresent processedResult: CapturedRoom, error: Error?) { onComplete(...) }
+// Coordinator: encode(with:) + init?(coder:) stubs required by RoomCaptureViewDelegate
+```

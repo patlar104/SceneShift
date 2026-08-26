@@ -60,3 +60,8 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Node / Cursor SDK scripts (Task 5)
+scripts/node_modules/
+scripts/.env
+.env
