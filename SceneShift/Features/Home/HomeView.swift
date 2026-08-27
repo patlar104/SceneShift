@@ -73,20 +73,17 @@ struct HomeView: View {
             } message: {
                 Text(libraryErrorMessage)
             }
+            .task {
+                await scanStore.loadIndexIfNeeded()
+            }
         }
     }
 
     private func scanRow(_ scan: SavedScan) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(scan.name)
-            Text(formattedFileSize(for: scan))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            ScanFileSizeLabel(scan: scan)
         }
-    }
-
-    private func formattedFileSize(for scan: SavedScan) -> String {
-        ByteCountFormatter.string(fromByteCount: scanStore.fileSize(for: scan), countStyle: .file)
     }
 
     private func beginRename(_ scan: SavedScan) {
@@ -100,10 +97,12 @@ struct HomeView: View {
         scanPendingRename = nil
         let trimmed = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        do {
-            try scanStore.rename(scan, to: trimmed)
-        } catch {
-            presentLibraryError(error)
+        Task {
+            do {
+                try await scanStore.rename(scan, to: trimmed)
+            } catch {
+                presentLibraryError(error)
+            }
         }
     }
 
@@ -115,10 +114,12 @@ struct HomeView: View {
     }
 
     private func delete(_ scan: SavedScan) {
-        do {
-            try scanStore.delete(scan)
-        } catch {
-            presentLibraryError(error)
+        Task {
+            do {
+                try await scanStore.delete(scan)
+            } catch {
+                presentLibraryError(error)
+            }
         }
     }
 
@@ -193,7 +194,7 @@ struct ScanPreviewContainer: View {
         exportErrorMessage = nil
         do {
             // Cached USDZ stays on disk until the user deletes the scan so share can finish.
-            previewURL = try scanStore.exportUSDZ(for: scan)
+            previewURL = try await scanStore.exportUSDZ(for: scan)
         } catch {
             previewURL = nil
             if isInsufficientStorage(error) {
@@ -204,6 +205,23 @@ struct ScanPreviewContainer: View {
             }
         }
         isExporting = false
+    }
+}
+
+private struct ScanFileSizeLabel: View {
+    @EnvironmentObject private var scanStore: ScanStore
+    let scan: SavedScan
+
+    @State private var formattedSize = ""
+
+    var body: some View {
+        Text(formattedSize)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .task(id: scan.id) {
+                let byteCount = await scanStore.fileSize(for: scan)
+                formattedSize = ByteCountFormatter.string(fromByteCount: byteCount, countStyle: .file)
+            }
     }
 }
 

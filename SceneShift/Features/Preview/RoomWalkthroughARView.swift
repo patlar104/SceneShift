@@ -226,6 +226,7 @@ struct RoomWalkthroughARView: UIViewRepresentable {
     }
 }
 
+@MainActor
 private func configureNonAR(_ view: ARView) {
     view.automaticallyConfigureSession = false
     view.cameraMode = .nonAR

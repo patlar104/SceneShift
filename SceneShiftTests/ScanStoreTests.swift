@@ -10,21 +10,21 @@ import XCTest
 final class ScanStoreTests: XCTestCase {
     private var directory = FileManager.default.temporaryDirectory
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("ScanStoreTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: directory)
     }
 
-    func testSaveAndLoadRoundTrip() throws {
+    func testSaveAndLoadRoundTrip() async throws {
         let store = ScanStore(directory: directory)
         let roomData = Data("stub-room-bytes".utf8)
 
-        let saved = try store.save(roomData: roomData, name: "Living Room")
+        let saved = try await store.save(roomData: roomData, name: "Living Room")
 
         XCTAssertEqual(saved.name, "Living Room")
         XCTAssertEqual(saved.roomFileName, "\(saved.id.uuidString).room")
@@ -35,6 +35,7 @@ final class ScanStoreTests: XCTestCase {
         XCTAssertEqual(writtenRoom, roomData)
 
         let reloaded = ScanStore(directory: directory)
+        await reloaded.loadIndexIfNeeded()
         XCTAssertEqual(reloaded.scans.map(\.id), [saved.id])
         XCTAssertEqual(reloaded.scans.map(\.name), ["Living Room"])
         XCTAssertEqual(reloaded.scans.map(\.roomFileName), [saved.roomFileName])
@@ -42,47 +43,50 @@ final class ScanStoreTests: XCTestCase {
         XCTAssertNil(reloaded.indexLoadError)
     }
 
-    func testRenameUpdatesIndex() throws {
+    func testRenameUpdatesIndex() async throws {
         let store = ScanStore(directory: directory)
-        let saved = try store.save(roomData: Data("stub".utf8), name: "Old Name")
+        let saved = try await store.save(roomData: Data("stub".utf8), name: "Old Name")
 
-        try store.rename(saved, to: "New Name")
+        try await store.rename(saved, to: "New Name")
 
         XCTAssertEqual(store.scans.first?.name, "New Name")
 
         let reloaded = ScanStore(directory: directory)
+        await reloaded.loadIndexIfNeeded()
         XCTAssertEqual(reloaded.scans.first?.id, saved.id)
         XCTAssertEqual(reloaded.scans.first?.name, "New Name")
     }
 
-    func testDeleteRemovesScanAndFiles() throws {
+    func testDeleteRemovesScanAndFiles() async throws {
         let store = ScanStore(directory: directory)
-        let saved = try store.save(roomData: Data("stub".utf8), name: "To Delete")
+        let saved = try await store.save(roomData: Data("stub".utf8), name: "To Delete")
         let roomURL = directory.appendingPathComponent(saved.roomFileName)
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: roomURL.path))
 
-        try store.delete(saved)
+        try await store.delete(saved)
 
         XCTAssertTrue(store.scans.isEmpty)
         XCTAssertFalse(FileManager.default.fileExists(atPath: roomURL.path))
 
         let reloaded = ScanStore(directory: directory)
+        await reloaded.loadIndexIfNeeded()
         XCTAssertTrue(reloaded.scans.isEmpty)
     }
 
-    func testFileSizeReturnsRoomByteCount() throws {
+    func testFileSizeReturnsRoomByteCount() async throws {
         let store = ScanStore(directory: directory)
         let roomData = Data(repeating: 0xAB, count: 128)
-        let saved = try store.save(roomData: roomData, name: "Sized")
+        let saved = try await store.save(roomData: roomData, name: "Sized")
 
-        XCTAssertEqual(store.fileSize(for: saved), Int64(roomData.count))
+        let byteCount = await store.fileSize(for: saved)
+        XCTAssertEqual(byteCount, Int64(roomData.count))
     }
 
-    func testFileSizeIncludesCachedUSDZ() throws {
+    func testFileSizeIncludesCachedUSDZ() async throws {
         let store = ScanStore(directory: directory)
         let roomData = Data(repeating: 0x01, count: 10)
-        let saved = try store.save(roomData: roomData, name: "With USDZ")
+        let saved = try await store.save(roomData: roomData, name: "With USDZ")
         let usdzData = Data(repeating: 0x02, count: 25)
         let usdzName = "\(saved.id.uuidString).usdz"
         try usdzData.write(to: directory.appendingPathComponent(usdzName))
@@ -90,33 +94,39 @@ final class ScanStoreTests: XCTestCase {
         var withUsdz = saved
         withUsdz.usdzFileName = usdzName
 
-        XCTAssertEqual(store.fileSize(for: withUsdz), Int64(roomData.count + usdzData.count))
+        let byteCount = await store.fileSize(for: withUsdz)
+        XCTAssertEqual(byteCount, Int64(roomData.count + usdzData.count))
     }
 
-    func testLoadRoomThrowsForStubbedRoomFile() throws {
+    func testLoadRoomThrowsForStubbedRoomFile() async throws {
         let store = ScanStore(directory: directory)
-        let saved = try store.save(roomData: Data("not-a-captured-room".utf8), name: "Stub")
+        let saved = try await store.save(roomData: Data("not-a-captured-room".utf8), name: "Stub")
 
-        XCTAssertThrowsError(try store.loadRoom(for: saved))
+        do {
+            _ = try await store.loadRoom(for: saved)
+            XCTFail("Expected loadRoom to throw")
+        } catch {
+            // expected
+        }
     }
 
-    func testFileSizeDoesNotMutateScans() throws {
+    func testFileSizeDoesNotMutateScans() async throws {
         let store = ScanStore(directory: directory)
-        let saved = try store.save(roomData: Data(repeating: 0xAB, count: 64), name: "Sized")
+        let saved = try await store.save(roomData: Data(repeating: 0xAB, count: 64), name: "Sized")
         let scansBefore = store.scans
         var published = false
         let cancellable = store.objectWillChange.sink { published = true }
 
-        _ = store.fileSize(for: saved)
+        _ = await store.fileSize(for: saved)
 
         XCTAssertFalse(published)
         XCTAssertEqual(store.scans, scansBefore)
         _ = cancellable
     }
 
-    func testCachedUSDZExportDoesNotMutatePublishedScans() throws {
+    func testCachedUSDZExportDoesNotMutatePublishedScans() async throws {
         let store = ScanStore(directory: directory)
-        let saved = try store.save(roomData: Data("stub".utf8), name: "Cached")
+        let saved = try await store.save(roomData: Data("stub".utf8), name: "Cached")
         let usdzName = "\(saved.id.uuidString).usdz"
         try Data("usdz".utf8).write(to: directory.appendingPathComponent(usdzName))
 
@@ -128,11 +138,12 @@ final class ScanStoreTests: XCTestCase {
         try encoder.encode([indexed]).write(to: directory.appendingPathComponent("scans.json"))
 
         let reloaded = ScanStore(directory: directory)
+        await reloaded.loadIndexIfNeeded()
         let scan = try XCTUnwrap(reloaded.scans.first)
         var published = false
         let cancellable = reloaded.objectWillChange.sink { published = true }
 
-        let url = try reloaded.exportUSDZ(for: scan)
+        let url = try await reloaded.exportUSDZ(for: scan)
 
         XCTAssertEqual(url.lastPathComponent, usdzName)
         XCTAssertFalse(published)
@@ -140,18 +151,19 @@ final class ScanStoreTests: XCTestCase {
         _ = cancellable
     }
 
-    func testCorruptIndexSetsLoadError() throws {
+    func testCorruptIndexSetsLoadError() async throws {
         try Data("{ not valid json".utf8).write(to: directory.appendingPathComponent("scans.json"))
 
         let store = ScanStore(directory: directory)
+        await store.loadIndexIfNeeded()
 
         XCTAssertTrue(store.scans.isEmpty)
         XCTAssertEqual(store.indexLoadError, .corruptIndex)
     }
 
-    func testScanPreviewContainerInitDoesNotExport() throws {
+    func testScanPreviewContainerInitDoesNotExport() async throws {
         let store = ScanStore(directory: directory)
-        let saved = try store.save(roomData: Data("stub".utf8), name: "Preview")
+        let saved = try await store.save(roomData: Data("stub".utf8), name: "Preview")
         let scansBefore = store.scans
         var published = false
         let cancellable = store.objectWillChange.sink { published = true }

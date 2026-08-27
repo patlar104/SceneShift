@@ -4,10 +4,10 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 
 ## Current
 
-- Task: 4 complete (walkthrough preview + exclusive 1-finger look / 2-finger strafe) — waiting for user approval before Task 5
-- Branch: feat/task-4-preview-export
+- Task: 4 complete + safe modernization (off-main persistence, strict-concurrency Debug) — waiting for user approval before Task 5
+- Branch: feat/off-main-persistence
 - Last cloud agent: none
-- Blockers: none — `[device-only]` preview/share/rename/delete/disk-full is for the human; do not block merge. Re-verify on device: one-finger drag looks without sliding; two-finger slides; pinch dollies; Reset; spinner still dismisses; share still sends USDZ.
+- Blockers: none — `[device-only]` preview/share/rename/delete/disk-full is for the human; do not block merge. Re-verify on device after off-main export: preview spinner dismisses; share still sends USDZ; save/rename/delete still work.
 - Fixture: full `CapturedRoom` JSON round-trip still waits for `SceneShiftTests/Fixtures/sample.room`. Export one real scan during a device test. Do not invent JSON.
 - Signing: No development team is committed in shared `project.pbxproj` settings (bundle `com.sceneshift.app` remains). Configure a Team locally in Xcode under Signing & Capabilities before running on a device.
 
@@ -18,6 +18,7 @@ Living checklist for local and cloud agent handoff. Update this file at the **en
 - [x] Task 2 — ScanStore + SavedScan with XCTest round-trip tests
 - [x] Task 3 — RoomPlan scan flow (RoomCaptureRepresentable, ScanSessionView, LiDAR guard)
 - [x] Task 4 — RealityKit walkthrough preview, USDZ export, share sheet, delete/rename from library
+- [x] Modernization — `ScanPersistence` actor (off-main I/O), async `ScanStore`, Debug `SWIFT_STRICT_CONCURRENCY=complete`, `@MainActor configureNonAR`
 
 ## Pending
 

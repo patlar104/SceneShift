@@ -159,12 +159,14 @@ struct ScanSessionView: View {
         guard let capturedRoom else { return }
         let trimmed = scanName.trimmingCharacters(in: .whitespacesAndNewlines)
         let name = trimmed.isEmpty ? "Scan" : trimmed
-        do {
-            _ = try scanStore.save(room: capturedRoom, name: name)
-            dismiss()
-        } catch {
-            errorMessage = error.localizedDescription
-            showError = true
+        Task {
+            do {
+                _ = try await scanStore.save(room: capturedRoom, name: name)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
         }
     }
 

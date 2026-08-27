@@ -75,3 +75,6 @@ airdroped-tests/
 
 # Cursor local agent state
 .cursor/hooks/state/
+
+# Local Xcode signing (personal development team — see Config/Local.xcconfig.example)
+Config/Local.xcconfig
