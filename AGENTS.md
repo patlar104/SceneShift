@@ -54,6 +54,7 @@ Read `PROGRESS.md` for the active task, branch, optional cloud agent id (`bc-…
 - During audits or config work, preserve the existing working tree; do not reset, stash, clean, or discard unrelated user changes
 - Do not commit machine-specific Xcode or editor settings (development team, physical device IDs, local LLDB or toolchain paths)
 - SwiftLint (`.swiftlint.yml`) and Apple swift-format (`.swift-format`) are expected for local Swift quality; use Cursor/VS Code tasks **SwiftLint**, **Swift: Format**, and **Swift: Format lint**
+- Verify `xcodebuild` exit status before piping its output to `rg` or other filters
 
 ## Learned Workspace Facts
 
@@ -62,5 +63,8 @@ Read `PROGRESS.md` for the active task, branch, optional cloud agent id (`bc-…
 - `.cursor/cli.json` must follow the current Cursor CLI schema (`permissions` only; no unsupported top-level keys such as `attribution`)
 - `.cursor/hooks/state/` is local agent state and is gitignored
 - Project MCP server is `xcode-tools` via `xcrun mcpbridge` (enable Intelligence/MCP in Xcode with the project open)
-- CI and local simulator tests prefer iPhone 16, then iPhone 17, then the first available iPhone from `xcodebuild -showdestinations`
+- CI and local `xcodebuild` builds/tests use `platform=iOS Simulator,OS=latest,name=…` with iPhone 16→17→first-available fallback (see `.github/workflows/ci.yml`); bare `name=iPhone 16` without `OS=latest` fails on Xcode 27; use `-showBuildSettings` without `-destination` for settings queries
 - Do not commit USDZ binaries or files under `airdroped-tests/`
+- Project uses Swift 5.0 language mode; Debug sets `SWIFT_STRICT_CONCURRENCY=complete` (Release/CI do not); strict Debug builds surface concurrency warnings not caught in Release/CI runs
+- `ScanPersistence` actor owns disk I/O and USDZ export; `ScanStore` is an async `@MainActor` facade; `PreviewLoad.swift` retains an iOS 17 `Entity.loadAsync` + Combine bridge alongside the iOS 18+ async path
+- App state uses `ObservableObject`/`@Published` for `ScanStore` (valid at iOS 17 deploy target; `@Observable` migration is optional modernization)
