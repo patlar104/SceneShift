@@ -52,6 +52,7 @@ struct RoomCaptureRepresentable: UIViewRepresentable {
         uiView.delegate = nil
     }
 
+    @MainActor
     @objc(SceneShiftRoomCaptureCoordinator)
     final class Coordinator: NSObject, RoomCaptureViewDelegate {
         var onComplete: (Result<CapturedRoom, Error>) -> Void

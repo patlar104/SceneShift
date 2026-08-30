@@ -17,6 +17,9 @@
     "editor.formatOnSave": true
   },
   "swiftlint.enable": true,
-  "swiftlint.configSearchPaths": [".swiftlint.yml"],
-  "swiftlint.onlyEnableWithConfig": true
+  "swiftlint.configSearchPaths": [
+    ".swiftlint.yml"
+  ],
+  "swiftlint.onlyEnableWithConfig": true,
+  "sweetpad.build.xcodeWorkspacePath": "SceneShift.xcodeproj/project.xcworkspace"
 }
