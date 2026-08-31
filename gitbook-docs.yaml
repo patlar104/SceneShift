@@ -1,0 +1,24 @@
+$schema: https://api.gitbook.com/gitbook-docs.yaml
+version: 1
+site:
+  title: SceneShift
+  structure:
+    - type: space
+      key: space-specs
+      title: Specs
+      path: specs
+      default: true
+      content:
+        directory: ./docs/superpowers/specs
+    - type: space
+      key: space-plans
+      title: Plans
+      path: plans
+      content:
+        directory: ./docs/superpowers/plans
+    - type: space
+      key: space-reviews
+      title: Reviews
+      path: reviews
+      content:
+        directory: ./docs/superpowers/reviews
